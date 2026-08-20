@@ -137,206 +137,186 @@ STATUS_COLORS: Dict[str, Dict[str, str]] = {
 # Modern Vibrant Light Theme Styling (Airbnb / Uber Aesthetic)
 CUSTOM_CSS = """
 <style>
+/* Global Clean Mobile-First Canvas */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-/* Global Root & Typography */
 html, body, [class*="css"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #0F172A;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif !important;
-    letter-spacing: -0.02em;
-    color: #0F172A;
-}
-
-/* Streamlit Container & Base Canvas */
-.stApp {
     background-color: #F8FAFC !important;
-    color: #0F172A !important;
 }
 
-/* Header & Nav */
+/* Mobile-First Full Width Container (No wasted margin) */
+.main .block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 2rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    max-width: 600px !important;
+    margin: 0 auto !important;
+}
+
+/* Streamlit Header clean adjust */
 header[data-testid="stHeader"] {
     background-color: rgba(248, 250, 252, 0.9) !important;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px) !important;
+    height: 2.8rem !important;
 }
 
-/* Modern Card Container */
+/* Cards & Surfaces */
 .stCard, .gim-card {
     background-color: #FFFFFF !important;
     border: 1px solid #E2E8F0 !important;
     border-radius: 14px !important;
-    padding: 1.25rem !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.2s ease-in-out;
-    margin-bottom: 1rem;
+    padding: 14px 16px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
 }
 
-.stCard:hover, .gim-card:hover {
-    border-color: #93C5FD !important;
-    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.08) !important;
-}
-
-/* Hero Section */
+/* Mobile Hero Banner */
 .gim-hero {
     background: linear-gradient(135deg, #1E40AF 0%, #2563EB 50%, #3B82F6 100%) !important;
-    border-radius: 16px;
-    padding: 24px 28px;
-    margin-bottom: 24px;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
     color: #FFFFFF;
-    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .gim-hero h1, .gim-hero h2, .gim-hero h3 {
     color: #FFFFFF !important;
+    font-family: 'Outfit', sans-serif !important;
 }
 
 .gim-hero p {
     color: #DBEAFE !important;
 }
 
-/* Primary Action Buttons */
+/* Full Width Touch-Friendly Primary Button */
 button[kind="primary"], .stButton > button[kind="primary"] {
     background-color: #2563EB !important;
     color: #FFFFFF !important;
     border: none !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    font-size: 0.95rem !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
     min-height: 48px !important;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2) !important;
+    width: 100% !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25) !important;
     transition: all 0.2s ease !important;
 }
 
 button[kind="primary"]:hover, .stButton > button[kind="primary"]:hover {
     background-color: #1D4ED8 !important;
-    box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.3) !important;
     transform: translateY(-1px);
 }
 
-/* Secondary Buttons */
+/* Secondary Button */
 button[kind="secondary"], .stButton > button[kind="secondary"] {
     background-color: #FFFFFF !important;
-    color: #1E293B !important;
-    border: 1px solid #CBD5E1 !important;
-    border-radius: 10px !important;
+    color: #0F172A !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 12px !important;
     font-weight: 600 !important;
-    min-height: 44px !important;
+    min-height: 46px !important;
+    width: 100% !important;
 }
 
-button[kind="secondary"]:hover, .stButton > button[kind="secondary"]:hover {
+/* Mobile-Optimized Tab Bar (Equal Width, No Horizontal Scroll) */
+div[data-baseweb="tab-list"] {
+    display: flex !important;
+    width: 100% !important;
+    gap: 4px !important;
     background-color: #F1F5F9 !important;
-    border-color: #94A3B8 !important;
+    border-radius: 12px !important;
+    padding: 4px !important;
+    margin-bottom: 14px !important;
+    overflow-x: hidden !important;
 }
 
-/* Pill Badges */
+div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 8px 6px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    border-radius: 8px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #64748B !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+}
+
+div[data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
+    background: #FFFFFF !important;
+    color: #2563EB !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+div[data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+
+/* Mobile Inputs & Dropdowns (Crisp Light Background) */
+div[data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+    min-height: 46px !important;
+}
+
+div[data-baseweb="select"] * {
+    color: #0F172A !important;
+}
+
+div[data-baseweb="input"] {
+    background-color: #FFFFFF !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+}
+
+div[data-baseweb="input"] input {
+    color: #0F172A !important;
+}
+
+/* Badges */
 .badge-available, .badge-verified {
     background-color: #D1FAE5 !important;
     color: #065F46 !important;
-    border: 1px solid #A7F3D0 !important;
-    padding: 3px 10px;
+    padding: 2px 8px;
     border-radius: 9999px;
     font-weight: 600;
     font-size: 0.75rem;
-    display: inline-block;
 }
 
 .badge-urgent, .badge-emergency {
     background-color: #FEE2E2 !important;
     color: #991B1B !important;
-    border: 1px solid #FECACA !important;
-    padding: 3px 10px;
+    padding: 2px 8px;
     border-radius: 9999px;
     font-weight: 600;
     font-size: 0.75rem;
-    display: inline-block;
-}
-
-.badge-info {
-    background-color: #EFF6FF !important;
-    color: #1D4ED8 !important;
-    border: 1px solid #BFDBFE !important;
-    padding: 3px 10px;
-    border-radius: 9999px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    display: inline-block;
-}
-
-.badge-neutral {
-    background-color: #F1F5F9 !important;
-    color: #475569 !important;
-    border: 1px solid #E2E8F0 !important;
-    padding: 3px 10px;
-    border-radius: 9999px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    display: inline-block;
 }
 
 /* Compact Route Summary Bar */
 .route-badge-bar {
     background: #EFF6FF;
     border: 1px solid #BFDBFE;
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin: 12px 0 18px 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 10px 0 14px 0;
     color: #1E40AF;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-}
-
-/* Vehicle Selection Card */
-.vehicle-tier-card {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 14px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-    transition: all 0.2s ease;
-}
-
-.vehicle-tier-card:hover {
-    border-color: #2563EB;
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08);
-}
-
-.vehicle-tier-card.selected {
-    border: 2px solid #2563EB;
-    background: #F8FAFF;
-}
-
-/* Sidebar Light Styling */
-section[data-testid="stSidebar"] {
-    background-color: #F8FAFC !important;
-    border-right: 1px solid #E2E8F0 !important;
-}
-
-/* Inputs & Form Controls */
-div[data-baseweb="input"], div[data-baseweb="select"] {
-    background-color: #FFFFFF !important;
-    border-radius: 10px !important;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-    .stCard, .gim-card {
-        padding: 1rem !important;
-    }
-    .gim-hero {
-        padding: 18px 20px !important;
-    }
-    .route-badge-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 </style>
 """

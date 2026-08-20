@@ -1,7 +1,7 @@
 """
 Student Portal View for GIM Campus Mobility.
-Modern, clean, consumer-grade light theme (Uber/Airbnb style).
-Features dynamic Cabs/Self-Drive search, rectangular service tabs, transparent pricing, instant booking confirmation modal, active trip tracking, and dispute ticketing.
+100% Mobile-First / Mobile-Only optimized layout (Uber/Airbnb style).
+Features compact mobile hero, equal-width tab buttons, native mobile transit pass, and touch-friendly cards.
 """
 import datetime
 import streamlit as st
@@ -9,8 +9,7 @@ import pandas as pd
 from typing import Dict, Any, List, Optional
 from src.config import (
     ServiceSegment, VehicleCategory, VehicleType, BookingStatus,
-    PriorityLevel, ComplaintType, PLATFORM_CONVENIENCE_FEE,
-    STATUS_COLORS, mask_phone_number, format_inr, SELF_DRIVE_HOURLY_RATES
+    ComplaintType, PLATFORM_CONVENIENCE_FEE, format_inr, SELF_DRIVE_HOURLY_RATES
 )
 from src.services.vehicle_service import VehicleService
 from src.services.booking_service import BookingService
@@ -20,33 +19,29 @@ from src.services.distance_service import DistanceService
 
 
 def render_student_portal(student: Dict[str, Any]):
-    """Render main consumer-grade student mobility interface."""
+    """Render 100% mobile-first student mobility interface."""
     student_id = student.get("id")
     student_name = student.get("full_name", "Student")
-    student_email = student.get("email", "")
     student_program = student.get("program", "PGDM")
 
-    # Header Card
+    # Compact Mobile Hero Header
     st.markdown(f"""
     <div class="gim-hero">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <h2 style="margin:0; font-size:1.8rem; font-weight:800; color:#FFFFFF;">Campus Mobility</h2>
-                <p style="margin:4px 0 0 0; font-size:0.95rem; color:#DBEAFE;">
-                    Welcome, <strong>{student_name}</strong> • {student_program}
-                </p>
+                <div style="font-size:1.35rem; font-weight:800; color:#FFFFFF; letter-spacing:-0.02em;">GIM Mobility</div>
+                <div style="font-size:0.85rem; color:#DBEAFE; margin-top:2px;">{student_name} • {student_program}</div>
             </div>
-            <div style="background:rgba(255,255,255,0.18); border-radius:12px; padding:6px 14px; border:1px solid rgba(255,255,255,0.3);">
-                <span style="font-size:0.75rem; color:#DBEAFE; text-transform:uppercase; letter-spacing:0.04em;">Verified Campus ID</span><br/>
-                <span style="font-size:0.9rem; color:#FFFFFF; font-weight:600;">✓ {student_email}</span>
-            </div>
+            <span style="font-size:0.75rem; background:rgba(255,255,255,0.22); padding:4px 10px; border-radius:9999px; color:#FFFFFF; font-weight:600;">
+                ✓ Verified
+            </span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     # Toast notification if booking was just made
     if st.session_state.get("booking_just_confirmed"):
-        st.toast("🎉 Booking confirmed! Your driver details are now active.", icon="✅")
+        st.toast("🎉 Booking confirmed! Pass is now active.", icon="✅")
         st.session_state["booking_just_confirmed"] = False
 
     # Log page view telemetry
@@ -61,39 +56,43 @@ def render_student_portal(student: Dict[str, Any]):
     except Exception:
         active_bookings = []
 
-    # Active Trip Notification Banner (Visible immediately across all tabs)
+    # Active Trip Notification Banner (Mobile Pass Card)
     if active_bookings:
         latest = active_bookings[0]
-        latest_phone = latest.get("provider_phone") or latest.get("driver_phone") or "+91 98221 55667"
+        latest_phone = latest.get("provider_phone") or latest.get("driver_phone") or "+91 94220 66778"
         latest_driver = latest.get("business_name") or latest.get("driver_name") or "Verified Driver"
         st.markdown(f"""
-        <div style="background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 4px rgba(22, 101, 52, 0.05);">
-            <div>
-                <span style="background: #DCFCE7; color: #166534; font-weight: 700; font-size: 0.75rem; padding: 3px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.04em;">
-                    🟢 Active Ride Pass (#{latest['id'][:8]})
+        <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(22, 101, 52, 0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="background: #DCFCE7; color: #166534; font-weight: 700; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">
+                    🟢 Active Pass #{latest['id'][:6]}
                 </span>
-                <div style="font-size: 1.1rem; font-weight: 700; color: #0F172A; margin: 6px 0 2px 0;">
-                    📍 {latest.get('pickup_location')} ➔ {latest.get('dropoff_location')}
-                </div>
-                <div style="font-size: 0.85rem; color: #374151;">
-                    Driver: <strong>{latest_driver}</strong> • 📞 <strong>{latest_phone}</strong> • Vehicle: <strong>{latest.get('vehicle_model')}</strong> ({latest.get('vehicle_number')})
-                </div>
+                <span style="font-size: 1.15rem; font-weight: 800; color: #15803D;">{format_inr(latest.get('base_trip_fare', 0))}</span>
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 1.3rem; font-weight: 800; color: #15803D;">{format_inr(latest.get('base_trip_fare', 0))}</div>
-                <span style="font-size: 0.75rem; color: #166534; font-weight: 600;">✓ Confirmed at Gate 2</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: #0F172A; margin: 8px 0 4px 0;">
+                📍 {latest.get('pickup_location')} ➔ {latest.get('dropoff_location')}
+            </div>
+            <div style="font-size: 0.82rem; color: #475569; line-height: 1.4;">
+                Driver: <strong>{latest_driver}</strong><br/>
+                Vehicle: <strong>{latest.get('vehicle_model')}</strong> ({latest.get('vehicle_number')})
+            </div>
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <a href="tel:{latest_phone.replace(' ', '')}" style="display: inline-block; background: #166534; color: #FFFFFF; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-decoration: none;">
+                    📞 Call Driver ({latest_phone})
+                </a>
+                <span style="font-size: 0.72rem; color: #166534; font-weight: 600;">✓ Gate 2 Pickup</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-    active_tab_title = f"📍 Active Trips ({len(active_bookings)})" if active_bookings else "📍 Active Trips"
+    active_count_str = f"({len(active_bookings)})" if active_bookings else ""
 
-    # Navigation Tabs
+    # Mobile Compact Equal-Width Navigation Tabs
     tab_book, tab_active, tab_history, tab_help = st.tabs([
-        "🚗 Book a Ride",
-        active_tab_title,
-        "📜 Past Trips & Reviews",
-        "💬 Help & Support"
+        "🚗 Book",
+        f"📍 Active {active_count_str}".strip(),
+        "📜 History",
+        "💬 Support"
     ])
 
     with tab_book:
@@ -110,8 +109,8 @@ def render_student_portal(student: Dict[str, Any]):
 
 
 def render_booking_section(student: Dict[str, Any]):
-    """Dynamic ride & rental search with rectangular full-width tabs."""
-    service_tabs = st.tabs(["Cabs (Chauffeured)", "Self-Drive Rentals (Cars & Bikes)"])
+    """Dynamic ride & rental search with mobile-first segmented controls."""
+    service_tabs = st.tabs(["🚖 Campus Cabs", "🚗 Self-Drive"])
 
     with service_tabs[0]:
         render_cab_booking_flow(student)
@@ -121,23 +120,19 @@ def render_booking_section(student: Dict[str, Any]):
 
 
 def render_cab_booking_flow(student: Dict[str, Any]):
-    """Chauffeured cab booking interface with clean route calculations."""
+    """Mobile-first cab booking interface with clean route calculations."""
     pickup_loc = "GIM Gate No. 2"
 
-    # Pickup Point highlighted as a clean note
     st.markdown("""
-    <div style="font-size:0.82rem; color:#2563EB; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-        <span>📍</span> <span><strong>Campus Pickup Point:</strong> All verified cabs pick up directly at <strong>GIM Gate No. 2</strong>.</span>
+    <div style="font-size:0.8rem; color:#2563EB; font-weight:600; margin-bottom:10px;">
+        📍 <strong>Pickup Point:</strong> GIM Gate No. 2 (All verified campus cabs).
     </div>
     """, unsafe_allow_html=True)
-
-    col1, col2 = st.columns([3, 1])
 
     destination_list = DistanceService.get_all_destination_names()
     route_options = destination_list + ["Custom Destination / Other"]
 
-    with col1:
-        selected_dest = st.selectbox("Where to?", route_options, index=3, key="cab_dest_sel")
+    selected_dest = st.selectbox("Where to?", route_options, index=3, key="cab_dest_sel")
 
     custom_dest = ""
     if selected_dest == "Custom Destination / Other":
@@ -145,14 +140,13 @@ def render_cab_booking_flow(student: Dict[str, Any]):
 
     final_dest = custom_dest.strip() if selected_dest == "Custom Destination / Other" and custom_dest.strip() else selected_dest
 
-    with col2:
-        passengers_count = st.selectbox(
-            "Passengers",
-            [1, 2, 3, 4, 5, 6],
-            index=0,
-            format_func=lambda x: f"{x} Rider" if x == 1 else f"{x} Riders",
-            key="cab_pax_count"
-        )
+    passengers_count = st.selectbox(
+        "Passengers",
+        [1, 2, 3, 4, 5, 6],
+        index=0,
+        format_func=lambda x: f"{x} Rider" if x == 1 else f"{x} Riders",
+        key="cab_pax_count"
+    )
 
     # Route Distance Calculation
     try:
@@ -161,11 +155,11 @@ def render_cab_booking_flow(student: Dict[str, Any]):
     except Exception:
         distance_km, duration_mins = 31.0, 45
 
-    # Compact Route Summary Bar
+    # Compact Mobile Route Summary Bar
     st.markdown(f"""
     <div class="route-badge-bar">
-        <span>📍 <strong>GIM Gate 2</strong> ➔ <strong>{final_dest}</strong></span>
-        <span style="color:#2563EB;"><strong>{distance_km:.1f} km</strong> • ~{duration_mins} mins travel</span>
+        <span>📍 <strong>Gate 2</strong> ➔ <strong>{final_dest}</strong></span>
+        <span style="color:#2563EB; font-weight:700;">{distance_km:.1f} km • ~{duration_mins} mins</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -183,9 +177,9 @@ def render_cab_booking_flow(student: Dict[str, Any]):
         st.info("No verified cabs available matching the selected passenger count. Please try a different capacity.")
         return
 
-    st.markdown(f"#### Available Cabs ({len(available_cabs)})")
+    st.markdown(f"**Available Verified Cabs ({len(available_cabs)}):**")
 
-    # Render vehicle options as interactive cards
+    # Mobile-First Vehicle Cards (Vertical touch-friendly layout)
     for cab in available_cabs:
         tier = cab.get("vehicle_type", "Sedan")
         if tier not in ["Hatchback", "Sedan", "SUV"]:
@@ -195,96 +189,84 @@ def render_cab_booking_flow(student: Dict[str, Any]):
         trip_fare = fare_calc["total_fare"]
         rate_km = fare_calc["rate_per_km"]
 
-        # Passenger seat capacity = seating_capacity - 1
         total_seats = int(cab.get("seating_capacity", 4))
         pax_capacity = max(1, total_seats - 1)
 
         tier_tag = {
-            "Hatchback": ("Eco Choice", "#D1FAE5", "#065F46"),
+            "Hatchback": ("Eco", "#D1FAE5", "#065F46"),
             "Sedan": ("Comfort", "#EFF6FF", "#1D4ED8"),
-            "SUV": ("Spacious Group", "#FEF3C7", "#92400E")
+            "SUV": ("SUV Group", "#FEF3C7", "#92400E")
         }.get(tier, ("Standard", "#F1F5F9", "#475569"))
 
-        with st.container():
-            col_v1, col_v2, col_v3 = st.columns([2.5, 1.2, 1.3])
-
-            with col_v1:
-                st.markdown(f"""
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.15rem; font-weight:700; color:#0F172A;">{cab.get('vehicle_model')}</span>
+        with st.container(border=True):
+            # Card Top Row: Vehicle name & Price
+            st.markdown(f"""
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{cab.get('vehicle_model')}</div>
                     <span style="background:{tier_tag[1]}; color:{tier_tag[2]}; padding:2px 8px; border-radius:9999px; font-size:0.75rem; font-weight:600;">{tier_tag[0]}</span>
+                    <span style="font-size:0.8rem; color:#64748B; margin-left:4px;">💺 {pax_capacity} Seats</span>
                 </div>
-                <div style="font-size:0.85rem; color:#64748B; margin-top:2px;">
-                    💺 {pax_capacity} Passenger Seats • Driver: <strong>{cab.get('business_name')}</strong> • ⭐ {cab.get('driver_rating', 5.0):.1f} ({cab.get('total_trips', 0)} trips)
-                </div>
-                """, unsafe_allow_html=True)
-
-            with col_v2:
-                st.markdown(f"""
                 <div style="text-align:right;">
-                    <div style="font-size:1.3rem; font-weight:800; color:#0F172A;">{format_inr(trip_fare)}</div>
-                    <div style="font-size:0.75rem; color:#64748B;">₹{rate_km:.0f}/km • 0% driver cut</div>
+                    <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(trip_fare)}</div>
+                    <div style="font-size:0.72rem; color:#64748B;">₹{rate_km:.0f}/km • 0% cut</div>
                 </div>
-                """, unsafe_allow_html=True)
+            </div>
+            <div style="font-size:0.82rem; color:#475569; margin:6px 0 10px 0;">
+                Driver: <strong>{cab.get('business_name')}</strong> • ⭐ {cab.get('driver_rating', 5.0):.1f} ({cab.get('total_trips', 0)} trips)
+            </div>
+            """, unsafe_allow_html=True)
 
-            with col_v3:
-                if st.button("Select & Book", key=f"book_cab_{cab['id']}", use_container_width=True, type="primary"):
-                    try:
-                        AnalyticsService.log_event("booking_started", user_id=student["id"], metadata={"vehicle_id": cab["id"], "fare": trip_fare, "segment": "Cab"})
-                    except Exception:
-                        pass
-                    trip_ctx = {
-                        "pickup": pickup_loc,
-                        "dropoff": final_dest,
-                        "distance_km": distance_km,
-                        "base_trip_fare": trip_fare,
-                        "passengers": passengers_count,
-                        "duration": f"~{duration_mins} mins",
-                        "start_dt": datetime.datetime.now().isoformat(),
-                        "end_dt": (datetime.datetime.now() + datetime.timedelta(minutes=duration_mins)).isoformat()
-                    }
-                    show_booking_confirmation_dialog(cab, student, trip_ctx)
-
-            st.divider()
+            if st.button("Select & Book", key=f"book_cab_{cab['id']}", use_container_width=True, type="primary"):
+                try:
+                    AnalyticsService.log_event("booking_started", user_id=student["id"], metadata={"vehicle_id": cab["id"], "fare": trip_fare, "segment": "Cab"})
+                except Exception:
+                    pass
+                trip_ctx = {
+                    "pickup": pickup_loc,
+                    "dropoff": final_dest,
+                    "distance_km": distance_km,
+                    "base_trip_fare": trip_fare,
+                    "passengers": passengers_count,
+                    "duration": f"~{duration_mins} mins",
+                    "start_dt": datetime.datetime.now().isoformat(),
+                    "end_dt": (datetime.datetime.now() + datetime.timedelta(minutes=duration_mins)).isoformat()
+                }
+                show_booking_confirmation_dialog(cab, student, trip_ctx)
 
 
 def render_self_drive_booking_flow(student: Dict[str, Any]):
-    """Cascading self-drive car and bike rentals."""
-    st.caption("Drive yourself across Goa with transparent hourly rates. Zero security lockups.")
+    """Mobile-first self-drive car and bike rentals."""
+    st.caption("Drive yourself across Goa with transparent hourly rates.")
 
-    col_c1, col_c2, col_c3 = st.columns(3)
+    chosen_cat = st.selectbox(
+        "1. Vehicle Category",
+        [VehicleCategory.FOUR_WHEELER.value, VehicleCategory.TWO_WHEELER.value],
+        format_func=lambda x: "🚗 4-Wheeler (Cars)" if x == VehicleCategory.FOUR_WHEELER.value else "🛵 2-Wheeler (Bikes & Scooties)",
+        key="sd_cat_sel"
+    )
 
-    with col_c1:
-        chosen_cat = st.selectbox(
-            "1. Vehicle Category",
-            [VehicleCategory.FOUR_WHEELER.value, VehicleCategory.TWO_WHEELER.value],
-            format_func=lambda x: "🚗 4-Wheeler (Cars)" if x == VehicleCategory.FOUR_WHEELER.value else "🛵 2-Wheeler (Bikes & Scooties)",
-            key="sd_cat_sel"
-        )
+    if chosen_cat == VehicleCategory.FOUR_WHEELER.value:
+        type_options = ["All", VehicleType.HATCHBACK.value, VehicleType.SEDAN.value, VehicleType.SUV.value]
+    else:
+        type_options = ["All", VehicleType.SCOOTY.value, VehicleType.BIKE.value]
 
-    with col_c2:
-        if chosen_cat == VehicleCategory.FOUR_WHEELER.value:
-            type_options = ["All", VehicleType.HATCHBACK.value, VehicleType.SEDAN.value, VehicleType.SUV.value]
-        else:
-            type_options = ["All", VehicleType.SCOOTY.value, VehicleType.BIKE.value]
+    chosen_type = st.selectbox("2. Vehicle Type", type_options, key="sd_type_sel")
 
-        chosen_type = st.selectbox("2. Vehicle Type", type_options, key="sd_type_sel")
+    if chosen_cat == VehicleCategory.TWO_WHEELER.value:
+        pax_options = [1, 2]
+    elif chosen_type == VehicleType.SUV.value:
+        pax_options = [1, 2, 3, 4, 5, 6, 7]
+    else:
+        pax_options = [1, 2, 3, 4, 5]
 
-    with col_c3:
-        if chosen_cat == VehicleCategory.TWO_WHEELER.value:
-            pax_options = [1, 2]
-        elif chosen_type == VehicleType.SUV.value:
-            pax_options = [1, 2, 3, 4, 5, 6, 7]
-        else:
-            pax_options = [1, 2, 3, 4, 5]
-
-        pax_count = st.selectbox(
-            "3. Passengers Count",
-            pax_options,
-            index=0,
-            format_func=lambda x: f"{x} Person" if x == 1 else f"{x} Persons",
-            key="sd_pax_filter"
-        )
+    pax_count = st.selectbox(
+        "3. Passengers Count",
+        pax_options,
+        index=0,
+        format_func=lambda x: f"{x} Person" if x == 1 else f"{x} Persons",
+        key="sd_pax_filter"
+    )
 
     # Schedule Duration Picker
     col_d1, col_d2 = st.columns(2)
@@ -299,7 +281,7 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
     end_dt = datetime.datetime.combine(return_date, return_time)
 
     if end_dt <= start_dt:
-        st.warning("⚠️ Return time must be after the pickup time.")
+        st.warning("⚠️ Return time must be after pickup time.")
         return
 
     duration_hours = max(1.0, (end_dt - start_dt).total_seconds() / 3600.0)
@@ -317,13 +299,12 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
     except Exception:
         vehicles = []
 
-    st.markdown(f"#### Available Fleet ({len(vehicles)}) • Duration: **{duration_hours:.1f} Hours**")
+    st.markdown(f"**Available Fleet ({len(vehicles)}) • Duration: {duration_hours:.1f} hrs:**")
 
     if not vehicles:
-        st.info("No vehicles currently available matching the exact criteria. Try adjusting the category or passenger count.")
+        st.info("No vehicles currently available matching the exact criteria.")
         return
 
-    # Render rental vehicles
     for v in vehicles:
         v_type = v.get("vehicle_type", "Hatchback")
         hourly_rate = SELF_DRIVE_HOURLY_RATES.get(v_type, 70.0)
@@ -333,48 +314,43 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
         deposit = pricing_info.get("security_deposit", 1500)
         fuel = pricing_info.get("fuel_type", "Petrol")
 
-        with st.container():
-            col_r1, col_r2, col_r3 = st.columns([2.5, 1.2, 1.3])
-
-            with col_r1:
-                st.markdown(f"""
-                <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{v.get('vehicle_model')}</div>
-                <div style="font-size:0.85rem; color:#64748B; margin-top:2px;">
-                    💺 {v.get('seating_capacity')} Seats • ⛽ {fuel} • Deposit: {format_inr(deposit)} • Agency: <strong>{v.get('business_name')}</strong>
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{v.get('vehicle_model')}</div>
+                    <span style="font-size:0.8rem; color:#64748B;">💺 {v.get('seating_capacity')} Seats • ⛽ {fuel}</span>
                 </div>
-                """, unsafe_allow_html=True)
-
-            with col_r2:
-                st.markdown(f"""
                 <div style="text-align:right;">
                     <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(total_rent)}</div>
-                    <div style="font-size:0.75rem; color:#64748B;">{format_inr(hourly_rate)}/hr • {duration_hours:.0f} hrs</div>
+                    <div style="font-size:0.72rem; color:#64748B;">{format_inr(hourly_rate)}/hr</div>
                 </div>
-                """, unsafe_allow_html=True)
+            </div>
+            <div style="font-size:0.82rem; color:#475569; margin:6px 0 10px 0;">
+                Deposit: {format_inr(deposit)} • Agency: <strong>{v.get('business_name')}</strong>
+            </div>
+            """, unsafe_allow_html=True)
 
-            with col_r3:
-                if st.button("Book Rental", key=f"book_sd_{v['id']}", use_container_width=True, type="primary"):
-                    try:
-                        AnalyticsService.log_event("booking_started", user_id=student["id"], metadata={"vehicle_id": v["id"], "fare": total_rent, "segment": "Self-Drive"})
-                    except Exception:
-                        pass
-                    trip_ctx = {
-                        "pickup": "GIM Gate No. 2",
-                        "dropoff": "Self-Drive Return (Gate 2)",
-                        "base_trip_fare": total_rent,
-                        "passengers": pax_count,
-                        "duration": f"{duration_hours:.1f} hours",
-                        "start_dt": start_dt.isoformat(),
-                        "end_dt": end_dt.isoformat()
-                    }
-                    show_booking_confirmation_dialog(v, student, trip_ctx)
-
-            st.divider()
+            if st.button("Book Rental", key=f"book_sd_{v['id']}", use_container_width=True, type="primary"):
+                try:
+                    AnalyticsService.log_event("booking_started", user_id=student["id"], metadata={"vehicle_id": v["id"], "fare": total_rent, "segment": "Self-Drive"})
+                except Exception:
+                    pass
+                trip_ctx = {
+                    "pickup": "GIM Gate No. 2",
+                    "dropoff": "Self-Drive Return (Gate 2)",
+                    "base_trip_fare": total_rent,
+                    "passengers": pax_count,
+                    "duration": f"{duration_hours:.1f} hours",
+                    "start_dt": start_dt.isoformat(),
+                    "end_dt": end_dt.isoformat()
+                }
+                show_booking_confirmation_dialog(v, student, trip_ctx)
 
 
-@st.dialog("💳 Payment & Booking Confirmation", width="large")
+@st.dialog("💳 Confirm Booking", width="small")
 def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str, Any], trip_context: Dict[str, Any]):
-    """Native popup confirmation dialog."""
+    """Mobile popup confirmation dialog."""
     pickup_point = trip_context.get("pickup", "GIM Gate No. 2")
     destination = trip_context.get("dropoff", "Goa Destination")
     base_fare = float(trip_context.get("base_trip_fare", 0.0))
@@ -383,40 +359,40 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
     passengers = trip_context.get("passengers", 1)
 
     st.markdown(f"""
-    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px; margin-bottom:14px;">
-        <div style="font-size:0.8rem; font-weight:700; color:#2563EB; text-transform:uppercase;">Trip Summary</div>
-        <div style="font-size:1.15rem; font-weight:700; color:#0F172A; margin:4px 0;">📍 {pickup_point} ➔ {destination}</div>
-        <div style="font-size:0.85rem; color:#475569;">
-            Vehicle: <strong>{vehicle.get('vehicle_model')}</strong> ({vehicle.get('vehicle_number')})<br/>
-            Provider: <strong>{vehicle.get('business_name')}</strong> • {passengers} Passenger(s) • {duration_str}
+    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; margin-bottom:12px;">
+        <div style="font-size:0.75rem; font-weight:700; color:#2563EB; text-transform:uppercase;">Trip Summary</div>
+        <div style="font-size:1.05rem; font-weight:700; color:#0F172A; margin:3px 0;">📍 {pickup_point} ➔ {destination}</div>
+        <div style="font-size:0.8rem; color:#475569;">
+            {vehicle.get('vehicle_model')} • {vehicle.get('business_name')}<br/>
+            {passengers} Rider(s) • {duration_str}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     # Billing breakdown
-    st.markdown("##### 🧾 Transparent Billing Breakdown")
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         st.markdown(f"""
-        • Trip Fare (100% to Driver):<br/>
-        • Campus Platform Fee:<br/>
-        <strong style="font-size:1.1rem; color:#0F172A;">Total Amount:</strong>
+        <div style="font-size:0.85rem; color:#475569; line-height:1.6;">
+            • Trip Fare (100% to Driver):<br/>
+            • Platform Fee:<br/>
+            <strong style="color:#0F172A; font-size:0.95rem;">Total:</strong>
+        </div>
         """, unsafe_allow_html=True)
     with col_b2:
         st.markdown(f"""
-        <div style="text-align:right;">
+        <div style="text-align:right; font-size:0.85rem; line-height:1.6;">
             <strong>{format_inr(base_fare)}</strong><br/>
             <strong>{format_inr(PLATFORM_CONVENIENCE_FEE)}</strong><br/>
-            <strong style="font-size:1.1rem; color:#2563EB;">{format_inr(total_due)}</strong>
+            <strong style="color:#2563EB; font-size:1.05rem;">{format_inr(total_due)}</strong>
         </div>
         """, unsafe_allow_html=True)
 
-    st.caption("🔒 0% Driver Commission: 100% of the trip fare goes directly to the verified local partner.")
-
-    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    st.caption("🔒 0% Driver Commission: 100% fare goes to verified local partner.")
+    st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
     if st.button("✅ Confirm Booking", use_container_width=True, type="primary"):
-        with st.spinner("Confirming booking with provider..."):
+        with st.spinner("Confirming..."):
             ok, msg, booking = BookingService.create_booking_request(
                 student_id=student["id"],
                 vehicle_id=vehicle["id"],
@@ -440,12 +416,12 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
                 st.rerun()
             else:
                 st.toast(msg, icon="⚠️")
-                st.error(f"Booking could not be completed: {msg}")
+                st.error(msg)
 
 
 def render_active_bookings_section(student: Dict[str, Any], active_bookings: Optional[List[Dict[str, Any]]] = None):
-    """Real-time active ride passes and trip tracking."""
-    st.markdown("### 📍 Active Ride Passes & Tracking")
+    """Mobile active ride passes and trip tracking."""
+    st.markdown("### 📍 Active Passes")
     if active_bookings is None:
         try:
             active_bookings = BookingService.get_active_bookings_for_student(student["id"])
@@ -453,63 +429,46 @@ def render_active_bookings_section(student: Dict[str, Any], active_bookings: Opt
             active_bookings = []
 
     if not active_bookings:
-        st.info("You currently have no active or in-progress trips. Book a ride from the 'Book a Ride' tab.")
+        st.info("No active trips right now. Book a ride from the 'Book' tab.")
         return
 
     for b in active_bookings:
         b_id = b["id"]
         status = b.get("booking_status", "confirmed")
-        phone_unmasked = b.get("provider_phone") or b.get("driver_phone") or "+91 98221 55667"
-        driver_name = b.get("driver_business") or b.get("business_name") or b.get("driver_name") or "Verified Campus Driver"
+        phone_unmasked = b.get("provider_phone") or b.get("driver_phone") or "+91 94220 66778"
+        driver_name = b.get("driver_business") or b.get("business_name") or b.get("driver_name") or "Verified Driver"
 
-        status_tag = {
-            "confirmed": ("Confirmed", "#D1FAE5", "#065F46"),
-            "in_progress": ("On the Way", "#DBEAFE", "#1E40AF"),
-            "requested": ("Pending Partner", "#FEF3C7", "#92400E")
-        }.get(status, ("Active", "#F1F5F9", "#334155"))
-
-        with st.container():
+        with st.container(border=True):
             st.markdown(f"""
-            <div class="stCard">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                    <div>
-                        <span style="background:{status_tag[1]}; color:{status_tag[2]}; padding:3px 10px; border-radius:9999px; font-weight:700; font-size:0.8rem;">
-                            🟢 {status_tag[0]}
-                        </span>
-                        <h3 style="margin:8px 0 2px 0; font-size:1.2rem; color:#0F172A;">{b.get('pickup_location')} ➔ {b.get('dropoff_location')}</h3>
-                        <span style="font-size:0.85rem; color:#64748B;">Pass ID: #{b_id[:8]} • Vehicle: <strong>{b.get('vehicle_model')}</strong> ({b.get('vehicle_number')})</span>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:1.3rem; font-weight:800; color:#2563EB;">{format_inr(b.get('base_trip_fare', 0))}</div>
-                        <span style="font-size:0.75rem; color:#059669; font-weight:600;">Fee Paid: ₹20</span>
-                    </div>
-                </div>
-                <div style="background:#F8FAFC; border-radius:10px; padding:12px; margin-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <span style="font-size:0.75rem; color:#64748B; text-transform:uppercase;">Driver Contact (Unmasked)</span>
-                        <div style="font-size:1rem; font-weight:700; color:#0F172A;">📞 {phone_unmasked}</div>
-                        <span style="font-size:0.8rem; color:#475569;">Driver: <strong>{driver_name}</strong></span>
-                    </div>
-                    <div>
-                        <span style="font-size:0.75rem; color:#64748B; text-transform:uppercase;">Pickup Point</span>
-                        <div style="font-size:0.95rem; font-weight:600; color:#0F172A;">GIM Gate No. 2</div>
-                        <span style="font-size:0.8rem; color:#475569;">Rental / Trip Pass Active</span>
-                    </div>
-                </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.75rem;">
+                    🟢 Confirmed Pass
+                </span>
+                <span style="font-size:1.15rem; font-weight:800; color:#2563EB;">{format_inr(b.get('base_trip_fare', 0))}</span>
+            </div>
+            <div style="font-size:1.05rem; font-weight:700; color:#0F172A; margin:6px 0 2px 0;">
+                📍 {b.get('pickup_location')} ➔ {b.get('dropoff_location')}
+            </div>
+            <div style="font-size:0.82rem; color:#475569; line-height:1.4;">
+                Driver: <strong>{driver_name}</strong><br/>
+                Vehicle: <strong>{b.get('vehicle_model')}</strong> ({b.get('vehicle_number')})
+            </div>
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                <a href="tel:{phone_unmasked.replace(' ', '')}" style="display:inline-block; background:#2563EB; color:#FFFFFF; font-size:0.8rem; font-weight:700; padding:6px 12px; border-radius:8px; text-decoration:none;">
+                    📞 Call Driver ({phone_unmasked})
+                </a>
             </div>
             """, unsafe_allow_html=True)
 
-            col_a1, col_a2 = st.columns([1, 4])
-            with col_a1:
-                if st.button("Cancel Ride", key=f"cancel_{b_id}", use_container_width=True):
-                    BookingService.update_booking_status(b_id, BookingStatus.CANCELLED.value)
-                    st.toast("Ride cancelled successfully.", icon="ℹ️")
-                    st.rerun()
+            if st.button("Cancel Pass", key=f"cancel_{b_id}", use_container_width=True):
+                BookingService.update_booking_status(b_id, BookingStatus.CANCELLED.value)
+                st.toast("Ride cancelled successfully.", icon="ℹ️")
+                st.rerun()
 
 
 def render_history_section(student: Dict[str, Any]):
-    """Completed trip ledger and post-trip review desk."""
-    st.markdown("### 📜 Past Trips & Reviews")
+    """Mobile completed trips."""
+    st.markdown("### 📜 Past Trips")
     try:
         bookings = BookingService.get_student_bookings(student["id"])
         past_bookings = [b for b in bookings if b.get("booking_status") in ("completed", "cancelled")]
@@ -522,26 +481,22 @@ def render_history_section(student: Dict[str, Any]):
 
     for pb in past_bookings:
         status = pb.get("booking_status", "completed")
-        with st.container():
-            col_h1, col_h2, col_h3 = st.columns([3, 1, 1])
+        with st.container(border=True):
+            col_h1, col_h2 = st.columns([3, 1])
             with col_h1:
                 st.markdown(f"""
-                <strong>{pb.get('pickup_location')} ➔ {pb.get('dropoff_location')}</strong><br/>
+                <strong style="color:#0F172A; font-size:0.95rem;">{pb.get('pickup_location')} ➔ {pb.get('dropoff_location')}</strong><br/>
                 <span style="font-size:0.8rem; color:#64748B;">{pb.get('vehicle_model')} • {pb.get('rental_duration_days_or_hours')}</span>
                 """, unsafe_allow_html=True)
             with col_h2:
-                st.markdown(f"**{format_inr(pb.get('base_trip_fare', 0))}**<br/><span style='font-size:0.75rem; color:#64748B;'>{status.title()}</span>", unsafe_allow_html=True)
-            with col_h3:
-                st.caption(f"Trip #{pb['id'][:6]}")
-            st.divider()
+                st.markdown(f"<div style='text-align:right;'><strong>{format_inr(pb.get('base_trip_fare', 0))}</strong><br/><span style='font-size:0.75rem; color:#64748B;'>{status.title()}</span></div>", unsafe_allow_html=True)
 
 
 def render_grievance_section(student: Dict[str, Any]):
-    """Grievance and dispute desk for students."""
-    st.markdown("### 💬 Campus Help & Dispute Desk")
-    st.caption("File any incident, overcharging, or route issue directly with the GIM Transport Committee.")
+    """Mobile dispute and grievance desk."""
+    st.markdown("### 💬 Help & Dispute Desk")
+    st.caption("File any incident or overcharging issue directly with the Campus Transport Committee.")
 
-    # Retrieve student's trips for selection
     try:
         student_trips = BookingService.get_student_bookings(student["id"])
     except Exception:
@@ -549,23 +504,19 @@ def render_grievance_section(student: Dict[str, Any]):
 
     trip_options = {"General Campus Feedback / Non-Trip Issue": None}
     for b in student_trips:
-        label = f"Trip #{b['id'][:8]} — {b.get('dropoff_location')} ({b.get('vehicle_model')})"
+        label = f"Trip #{b['id'][:6]} — {b.get('dropoff_location')}"
         trip_options[label] = b["id"]
 
     with st.form("student_complaint_form", clear_on_submit=True):
-        col_c1, col_c2 = st.columns(2)
-        with col_c1:
-            comp_type = st.selectbox(
-                "Category",
-                [ComplaintType.OVERCHARGING.value, ComplaintType.DRIVER_BEHAVIOR.value, ComplaintType.VEHICLE_CONDITION.value, ComplaintType.CANCELLATION.value, ComplaintType.SAFETY.value, ComplaintType.OTHER.value],
-                format_func=lambda x: x.replace("_", " ").title()
-            )
-        with col_c2:
-            chosen_trip_label = st.selectbox("Related Trip (Optional)", list(trip_options.keys()))
+        comp_type = st.selectbox(
+            "Category",
+            [ComplaintType.OVERCHARGING.value, ComplaintType.DRIVER_BEHAVIOR.value, ComplaintType.VEHICLE_CONDITION.value, ComplaintType.CANCELLATION.value, ComplaintType.SAFETY.value, ComplaintType.OTHER.value],
+            format_func=lambda x: x.replace("_", " ").title()
+        )
+        chosen_trip_label = st.selectbox("Related Trip (Optional)", list(trip_options.keys()))
+        comp_desc = st.text_area("Describe the Issue", placeholder="Provide clear details regarding the driver behavior or trip dispute...")
 
-        comp_desc = st.text_area("Describe the Issue", placeholder="Provide clear details regarding the driver behavior, route dispute, or vehicle condition...")
-
-        submit_ticket = st.form_submit_button("Submit Ticket to Transport Admin", type="primary", use_container_width=True)
+        submit_ticket = st.form_submit_button("Submit Ticket", type="primary", use_container_width=True)
 
         if submit_ticket:
             if not comp_desc.strip():
@@ -579,14 +530,14 @@ def render_grievance_section(student: Dict[str, Any]):
                     booking_id=chosen_b_id
                 )
                 if ok:
-                    st.toast("Ticket raised successfully! Transport committee has been notified.", icon="✅")
-                    st.success("Your ticket has been logged and assigned to campus administration.")
+                    st.toast("Ticket raised successfully! Transport committee notified.", icon="✅")
+                    st.success("Your ticket has been logged with campus administration.")
                 else:
                     st.toast(msg, icon="⚠️")
                     st.error(msg)
 
     st.markdown("---")
-    st.markdown("#### 📋 Your Submitted Tickets")
+    st.markdown("#### 📋 Submitted Tickets")
 
     try:
         user_complaints = ComplaintService.get_student_complaints(student["id"])
@@ -594,7 +545,7 @@ def render_grievance_section(student: Dict[str, Any]):
         user_complaints = []
 
     if not user_complaints:
-        st.info("You have not raised any active grievance tickets.")
+        st.info("No active grievance tickets.")
         return
 
     for c in user_complaints:
@@ -607,25 +558,16 @@ def render_grievance_section(student: Dict[str, Any]):
         }.get(c_status, ("🟡 Open", "#FEF3C7", "#92400E"))
 
         with st.container(border=True):
-            col_t1, col_t2 = st.columns([3.5, 1.5])
+            col_t1, col_t2 = st.columns([3, 1])
             with col_t1:
                 st.markdown(
-                    f"<span style='background:{status_tag[1]}; color:{status_tag[2]}; padding:3px 10px; border-radius:9999px; font-weight:700; font-size:0.78rem; display:inline-block; margin-bottom:6px;'>"
-                    f"{status_tag[0]}</span> <strong style='font-size:1.05rem; color:#0F172A; margin-left:6px;'>"
+                    f"<span style='background:{status_tag[1]}; color:{status_tag[2]}; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.75rem;'>"
+                    f"{status_tag[0]}</span> <strong style='font-size:0.95rem; color:#0F172A; margin-left:4px;'>"
                     f"{c.get('complaint_type', '').replace('_', ' ').title()}</strong>",
                     unsafe_allow_html=True
                 )
-                st.markdown(
-                    f"<div style='color:#334155; font-size:0.92rem; margin:6px 0; line-height:1.4;'>"
-                    f"{c.get('description')}</div>",
-                    unsafe_allow_html=True
-                )
+                st.markdown(f"<div style='color:#334155; font-size:0.88rem; margin:6px 0;'>{c.get('description')}</div>", unsafe_allow_html=True)
                 if c.get("admin_notes"):
-                    st.success(f"**Campus Admin Note:** {c.get('admin_notes')}")
+                    st.success(f"**Admin Note:** {c.get('admin_notes')}")
             with col_t2:
-                created = c.get("created_at", "")[:10]
-                st.markdown(
-                    f"<div style='text-align:right; font-size:0.75rem; color:#94A3B8;'>"
-                    f"Ticket #{c.get('id', '')[:8]}<br/>{created}</div>",
-                    unsafe_allow_html=True
-                )
+                st.markdown(f"<div style='text-align:right; font-size:0.72rem; color:#94A3B8;'>#{c.get('id', '')[:6]}</div>", unsafe_allow_html=True)
