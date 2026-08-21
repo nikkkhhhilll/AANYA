@@ -32,31 +32,32 @@ class AnalyticsService:
     @staticmethod
     def get_funnel_metrics() -> pd.DataFrame:
         """
-        Calculate genuine user conversion funnel from live analytics events and bookings:
+        Calculate user journey conversion funnel from live analytics events and bookings:
         Portal Visits -> Searches & Routes -> Vehicle Selected -> Fee Checkout -> Booking Confirmed.
+        Tracks session interaction events (e.g. repeated user visits over time are captured).
         """
         events = DBService.query("analytics_events")
         bookings = DBService.query("bookings")
-        
-        # 1. Real Page Views count from live Supabase events
-        pv_count = len([e for e in events if e.get("event_name") == "page_view"])
-        # Ensure base minimum from all recorded bookings if fresh table
-        pv_count = max(pv_count, len(bookings) * 3, 1)
 
-        # 2. Searches & Route Filters count
-        search_count = len([e for e in events if e.get("event_name") in ("search_query", "search_click")])
-        search_count = max(search_count, int(pv_count * 0.82), len(bookings) + 2)
+        # 1. Total page views (one logged per user session)
+        pv_raw = len([e for e in events if e.get("event_name") == "page_view"])
+        pv_count = max(pv_raw, len(bookings), 1)
 
-        # 3. Vehicle Selection count
-        select_count = len([e for e in events if e.get("event_name") in ("segment_selected", "vehicle_selected")])
-        select_count = max(select_count, int(pv_count * 0.64), len(bookings) + 1)
+        # 2. Total route search queries
+        search_raw = len([e for e in events if e.get("event_name") in ("search_query", "search_click")])
+        search_count = min(pv_count, max(search_raw, len(bookings)))
 
-        # 4. Fee Checkout Initiated count
-        start_count = len([e for e in events if e.get("event_name") == "booking_started"])
-        start_count = max(start_count, int(pv_count * 0.45), len(bookings))
+        # 3. Total vehicle selections
+        select_raw = len([e for e in events if e.get("event_name") in ("segment_selected", "vehicle_selected")])
+        select_count = min(search_count, max(select_raw, len(bookings)))
 
-        # 5. Confirmed Bookings in Database
-        comp_count = max(len([e for e in events if e.get("event_name") == "booking_completed"]), len(bookings))
+        # 4. Total checkout confirmation modals opened
+        start_raw = len([e for e in events if e.get("event_name") == "booking_started"])
+        start_count = min(select_count, max(start_raw, len(bookings)))
+
+        # 5. Total confirmed bookings
+        comp_raw = len([e for e in events if e.get("event_name") == "booking_completed"])
+        comp_count = min(start_count, max(comp_raw, len(bookings)))
 
         funnel_data = [
             {"Stage": "1. Portal Visits", "Users": pv_count, "Step": 1},

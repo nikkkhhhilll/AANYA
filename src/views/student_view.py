@@ -44,11 +44,13 @@ def render_student_portal(student: Dict[str, Any]):
         st.toast("🎉 Booking confirmed! Pass is now active.", icon="✅")
         st.session_state["booking_just_confirmed"] = False
 
-    # Log page view telemetry
-    try:
-        AnalyticsService.log_event("page_view", user_id=student_id, metadata={"portal": "student_view"})
-    except Exception:
-        pass
+    # Log page view telemetry once per session
+    if not st.session_state.get("page_view_logged"):
+        try:
+            AnalyticsService.log_event("page_view", user_id=student_id, metadata={"portal": "student_view"})
+            st.session_state["page_view_logged"] = True
+        except Exception:
+            pass
 
     # Fetch active bookings for dynamic tab counter & top banner
     try:
@@ -139,6 +141,22 @@ def render_cab_booking_flow(student: Dict[str, Any]):
         custom_dest = st.text_input("Enter Destination", placeholder="e.g. Mandrem Beach, North Goa", key="cab_custom_dest")
 
     final_dest = custom_dest.strip() if selected_dest == "Custom Destination / Other" and custom_dest.strip() else selected_dest
+
+    # Log segment selection once
+    if st.session_state.get("last_segment") != "Cab":
+        try:
+            AnalyticsService.log_event("segment_selected", user_id=student["id"], metadata={"segment": "Cab"})
+            st.session_state["last_segment"] = "Cab"
+        except Exception:
+            pass
+
+    # Log search query when destination changes
+    if final_dest and st.session_state.get("last_cab_dest") != final_dest:
+        try:
+            AnalyticsService.log_event("search_query", user_id=student["id"], metadata={"origin": pickup_loc, "destination": final_dest})
+            st.session_state["last_cab_dest"] = final_dest
+        except Exception:
+            pass
 
     passengers_count = st.selectbox(
         "Passengers",
@@ -245,6 +263,22 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
         format_func=lambda x: "🚗 4-Wheeler (Cars)" if x == VehicleCategory.FOUR_WHEELER.value else "🛵 2-Wheeler (Bikes & Scooties)",
         key="sd_cat_sel"
     )
+
+    # Log segment selection once
+    if st.session_state.get("last_segment") != "Self-Drive":
+        try:
+            AnalyticsService.log_event("segment_selected", user_id=student["id"], metadata={"segment": "Self-Drive"})
+            st.session_state["last_segment"] = "Self-Drive"
+        except Exception:
+            pass
+
+    # Log search query when category changes
+    if chosen_cat and st.session_state.get("last_sd_cat") != chosen_cat:
+        try:
+            AnalyticsService.log_event("search_query", user_id=student["id"], metadata={"origin": "GIM Gate No. 2", "category": chosen_cat})
+            st.session_state["last_sd_cat"] = chosen_cat
+        except Exception:
+            pass
 
     if chosen_cat == VehicleCategory.FOUR_WHEELER.value:
         type_options = ["All", VehicleType.HATCHBACK.value, VehicleType.SEDAN.value, VehicleType.SUV.value]
