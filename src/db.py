@@ -20,7 +20,11 @@ class LocalDatabaseEngine:
     _instance: Optional["LocalDatabaseEngine"] = None
 
     def __init__(self):
-        self.conn = sqlite3.connect(":memory:", check_same_thread=False)
+        import sys
+        # Ephemeral memory db for tests, persistent file db for running app
+        is_test = 'unittest' in sys.modules or any('test' in arg.lower() for arg in sys.argv)
+        db_path = ":memory:" if is_test else "ridesmart.db"
+        self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self._initialize_schema_and_seeds()
 
@@ -177,7 +181,11 @@ class LocalDatabaseEngine:
         );
         """)
 
-        self._populate_seed_data(cur)
+        # Only seed if no profiles exist (prevents resetting user data on app reload)
+        cur.execute("SELECT COUNT(*) FROM profiles")
+        count = cur.fetchone()[0]
+        if count == 0:
+            self._populate_seed_data(cur)
         self.conn.commit()
 
     def _populate_seed_data(self, cur):
@@ -273,12 +281,6 @@ class LocalDatabaseEngine:
         ]
         cur.executemany("INSERT OR REPLACE INTO reviews VALUES (?,?,?,?,?,?,?)", reviews_data)
 
-        # Complaints
-        complaints_data = [
-            ('77777777-7777-7777-7777-777777777701', '55555555-5555-5555-5555-555555555501', '11111111-1111-1111-1111-111111111101', '22222222-2222-2222-2222-222222222201', 'driver_behavior', 'Driver took an alternate toll route without prior notice, though fare was respected.', 'resolved', 'low', 'Driver cautioned regarding route consultation prior to departure.', now),
-            ('77777777-7777-7777-7777-777777777702', '55555555-5555-5555-5555-555555555503', '11111111-1111-1111-1111-111111111103', '22222222-2222-2222-2222-222222222202', 'safety', 'Emergency medical ride dispatched - tracking vehicle live to ensure smooth corridor.', 'under_investigation', 'critical', 'Campus Health Center and Security in direct touch with driver Ganesh.', now),
-        ]
-        cur.executemany("INSERT OR REPLACE INTO complaints VALUES (?,?,?,?,?,?,?,?,?,?)", complaints_data)
 
         # Analytics Events
         analytics_data = [

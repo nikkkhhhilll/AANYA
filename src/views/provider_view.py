@@ -55,34 +55,39 @@ def render_provider_portal(provider: Dict[str, Any]):
     """, unsafe_allow_html=True)
 
     # 1. Live Duty Status Control
-    st.markdown("### 🟢 Duty & Availability Status")
-    col_stat1, col_stat2 = st.columns([1, 2])
-    with col_stat1:
-        current_status_label = "Available (Accepting Rides)" if is_available else "Off-Duty / Unavailable"
-        new_avail = st.toggle("Online for Campus Bookings", value=is_available, key="driver_duty_toggle")
-        if new_avail != is_available:
-            try:
-                VehicleService.toggle_provider_availability(provider_id, new_avail)
-                st.toast(f"Status updated: {'Online & Accepting Rides' if new_avail else 'Off-Duty'}", icon="🟢" if new_avail else "⚪")
-                st.rerun()
-            except Exception:
-                st.toast("Could not update status. Please try again.", icon="⚠️")
+    status_color = "#10B981" if is_available else "#64748B"
+    status_bg = "#ECFDF5" if is_available else "#F1F5F9"
+    status_text = "#047857" if is_available else "#475569"
+    status_label = "🟢 ONLINE & DISPATCH READY" if is_available else "⚪ OFFLINE (OFF-DUTY)"
 
-    with col_stat2:
-        st.markdown(f"""
-        <div style="background:#FFFFFF; padding:12px 16px; border-radius:10px; border:1px solid #E2E8F0; border-left:4px solid {'#10B981' if is_available else '#EF4444'}; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
-            Current Status: <strong>{current_status_label}</strong><br/>
-            <span style="font-size:0.8rem; color:#64748B;">When online, students can immediately discover and book your vehicles.</span>
+    st.markdown(f"""
+    <div style="background:{status_bg}; border: 1.5px solid {status_color}; color: {status_text}; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; box-shadow: var(--shadow-sm);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:800; color:{status_text};">Active Duty Status</span>
+                <h4 style="margin:2px 0 0 0; font-size:1.15rem; font-weight:800; color:{status_text};">{status_label}</h4>
+            </div>
+            <span style="font-size:0.8rem; font-weight:600; opacity:0.85;">Flip toggle below to change status</span>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
+
+    new_avail = st.toggle("Accepting Campus Bookings & Dispatches", value=is_available, key="driver_duty_toggle")
+    if new_avail != is_available:
+        try:
+            VehicleService.toggle_provider_availability(provider_id, new_avail)
+            st.toast(f"Status updated: {'Online & Dispatch Ready' if new_avail else 'Off-Duty'}", icon="🟢" if new_avail else "⚪")
+            st.rerun()
+        except Exception:
+            st.toast("Could not update status. Please try again.", icon="⚠️")
 
     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
 
     # Navigation Sub-tabs
     tab_queue, tab_fleet, tab_earnings = st.tabs([
-        "📥 Active & Incoming Bookings",
-        "🚙 Vehicle Inventory",
-        "💰 Payouts & Earnings"
+        "📥 Bookings",
+        "🚙 Fleet",
+        "💰 Earnings"
     ])
 
     with tab_queue:
@@ -112,39 +117,45 @@ def render_dispatch_queue(provider_id: str):
     for trip in active_trips:
         trip_id = trip["id"]
         status = trip.get("booking_status", "confirmed")
-        with st.container():
-            col_d1, col_d2, col_d3 = st.columns([2.5, 1.2, 1.3])
-
-            with col_d1:
-                st.markdown(f"""
-                <div style="font-size:1.15rem; font-weight:700; color:#0F172A;">📍 {trip.get('pickup_location')} ➔ {trip.get('dropoff_location')}</div>
-                <div style="font-size:0.85rem; color:#64748B; margin-top:2px;">
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="font-size:1.15rem; font-weight:700; color:#0F172A;">📍 {trip.get('pickup_location')} ➔ {trip.get('dropoff_location')}</div>
+            <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+                <div style="font-size:0.85rem; color:#64748B;">
                     Student: <strong>{trip.get('student_name', 'Student')}</strong> (📞 {trip.get('student_phone', '')})<br/>
                     Vehicle: <strong>{trip.get('vehicle_model')}</strong> ({trip.get('vehicle_number')})
                 </div>
-                """, unsafe_allow_html=True)
-
-            with col_d2:
-                st.markdown(f"""
                 <div style="text-align:right;">
                     <div style="font-size:1.3rem; font-weight:800; color:#059669;">{format_inr(trip.get('base_trip_fare', 0))}</div>
-                    <span style="font-size:0.75rem; color:#64748B;">100% Direct Payout</span>
+                    <span style="font-size:0.75rem; color:#64748B;">100% Payout</span>
                 </div>
-                """, unsafe_allow_html=True)
-
-            with col_d3:
-                if status in ("requested", "confirmed"):
-                    if st.button("Mark In Progress", key=f"prog_{trip_id}", use_container_width=True):
-                        BookingService.update_booking_status(trip_id, BookingStatus.IN_PROGRESS.value)
-                        st.toast("Trip started!", icon="🚀")
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            
+            if status == "requested":
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    if st.button("✅ Accept", key=f"acc_{trip_id}", use_container_width=True, type="primary"):
+                        BookingService.update_booking_status(trip_id, BookingStatus.CONFIRMED.value)
+                        st.toast("Ride accepted!", icon="🟢")
                         st.rerun()
-                elif status == "in_progress":
-                    if st.button("Complete Trip", key=f"comp_{trip_id}", use_container_width=True, type="primary"):
-                        BookingService.update_booking_status(trip_id, BookingStatus.COMPLETED.value)
-                        st.toast("Trip marked completed!", icon="🎉")
+                with col_btn2:
+                    if st.button("❌ Decline", key=f"dec_{trip_id}", use_container_width=True, type="secondary"):
+                        BookingService.update_booking_status(trip_id, BookingStatus.CANCELLED.value)
+                        st.toast("Ride declined.", icon="⚪")
                         st.rerun()
-
-            st.divider()
+            elif status == "confirmed":
+                if st.button("🚀 Start Trip", key=f"start_{trip_id}", use_container_width=True, type="primary"):
+                    BookingService.update_booking_status(trip_id, BookingStatus.IN_PROGRESS.value)
+                    st.toast("Trip started!", icon="🚀")
+                    st.rerun()
+            elif status == "in_progress":
+                if st.button("✅ Complete Trip", key=f"comp_{trip_id}", use_container_width=True, type="primary"):
+                    BookingService.update_booking_status(trip_id, BookingStatus.COMPLETED.value)
+                    st.toast("Trip marked completed!", icon="🎉")
+                    st.rerun()
 
 
 def render_fleet_management(provider_id: str):

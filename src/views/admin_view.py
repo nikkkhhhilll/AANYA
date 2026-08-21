@@ -105,21 +105,25 @@ def render_manage_students():
         is_active = bool(s.get("is_active", 1))
         
         with st.container(border=True):
-            c1, c2, c3, c4 = st.columns([2.5, 2.5, 1.5, 1.5])
-            with c1:
-                st.markdown(f"<strong style='font-size:1.05rem; color:#0F172A;'>{s.get('full_name')}</strong>", unsafe_allow_html=True)
-                st.caption(f"ID: `{s_id[:8]}` • Joined: {s.get('created_at', '')[:10]}")
-            with c2:
-                st.markdown(f"📧 `{s.get('email')}`")
-                st.caption(f"📞 {s.get('phone')}")
-            with c3:
-                st.markdown(f"<span style='background:#EFF6FF; color:#1D4ED8; padding:3px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;'>{s.get('program') or 'PGDM'}</span>", unsafe_allow_html=True)
-            with c4:
-                status_toggle = st.toggle("Active", value=is_active, key=f"std_active_{s_id}")
-                if status_toggle != is_active:
-                    AuthService.update_user_status(s_id, status_toggle)
-                    st.toast(f"Student account status updated.")
-                    st.rerun()
+            st.markdown(f"""
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <strong style='font-size:1.05rem; color:#0F172A;'>{s.get('full_name')}</strong><br/>
+                    <span style="font-size:0.8rem; color:#64748B;">ID: {s_id[:8].upper()} • Joined: {s.get('created_at', '')[:10]}</span>
+                </div>
+                <span style='background:#EFF6FF; color:#1D4ED8; padding:3px 8px; border-radius:6px; font-weight:600; font-size:0.78rem;'>{s.get('program') or 'PGDM'}</span>
+            </div>
+            <div style="margin: 8px 0; font-size:0.85rem; color:#475569;">
+                📧 <code>{s.get('email')}</code><br/>
+                📞 <code>{s.get('phone')}</code>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            status_toggle = st.toggle("Active Account", value=is_active, key=f"std_active_{s_id}")
+            if status_toggle != is_active:
+                AuthService.update_user_status(s_id, status_toggle)
+                st.toast(f"Student account status updated.")
+                st.rerun()
 
 
 # ============================================================================
@@ -147,26 +151,35 @@ def render_manage_drivers():
         trips = int(d.get("total_completed_trips", 0))
 
         with st.container(border=True):
-            col1, col2, col3 = st.columns([3, 2, 2])
-            with col1:
-                st.markdown(f"<strong style='font-size:1.05rem; color:#0F172A;'>{d.get('business_name') or d.get('full_name')}</strong> ({d.get('full_name')})", unsafe_allow_html=True)
-                st.caption(f"License: `{d.get('license_number')}` | Phone: `{d.get('phone')}` | Email: `{d.get('email')}`")
-                if d.get("id_proof_url"):
-                    st.markdown(f"[📄 View Submitted KYC Document]({d.get('id_proof_url')})")
-            with col2:
-                st.markdown(f"⭐ Rating: **{rating:.1f}/5.0** ({trips} trips)")
-                if rating < 3.5:
-                    st.warning("⚠️ Low Rating Alert (< 3.5)")
-            with col3:
-                verify_toggle = st.toggle("KYC Approved", value=is_verified, key=f"kyc_v_{d_id}")
-                if verify_toggle != is_verified:
-                    VehicleService.update_provider_verification(d_id, verify_toggle)
-                    st.toast(f"Vendor verification updated to: {'Verified' if verify_toggle else 'Unverified'}")
-                    st.rerun()
+            st.markdown(f"""
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <strong style='font-size:1.1rem; color:#0F172A;'>{d.get('business_name') or d.get('full_name')}</strong><br/>
+                    <span style="font-size:0.8rem; color:#64748B;">Owner: {d.get('full_name')} | Rating: ⭐ {rating:.1f}/5.0 ({trips} trips)</span>
+                </div>
+                <span style='background:#F1F5F9; color:#475569; padding:3px 8px; border-radius:6px; font-weight:600; font-size:0.75rem;'>{d.get('provider_type') or 'Vendor'}</span>
+            </div>
+            <div style="margin: 8px 0; font-size:0.85rem; color:#475569;">
+                License: <code>{d.get('license_number')}</code><br/>
+                Contact: <code>{d.get('phone')}</code> • <code>{d.get('email')}</code>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if d.get("id_proof_url"):
+                st.markdown(f"[📄 View Submitted KYC Document]({d.get('id_proof_url')})")
+            
+            if rating < 3.5:
+                st.warning("⚠️ Low Rating Alert (< 3.5)")
+                
+            verify_toggle = st.toggle("KYC Approved", value=is_verified, key=f"kyc_v_{d_id}")
+            if verify_toggle != is_verified:
+                VehicleService.update_provider_verification(d_id, verify_toggle)
+                st.toast(f"Vendor verification updated to: {'Verified' if verify_toggle else 'Unverified'}")
+                st.rerun()
     # ================= Global Fleet Inventory Control =================
     st.markdown("---")
     st.markdown("### 🚙 Global Fleet Inventory Control")
-    st.caption("View, edit, or remove any vehicle registered on the GIM Mobility Platform.")
+    st.caption("View, edit, or remove any vehicle registered on the Ride Smart platform.")
     
     try:
         all_vehicles = VehicleService.get_all_vehicles()
@@ -287,29 +300,27 @@ def render_manage_bookings():
         b_id = b.get("id")
         cur_status = b.get("booking_status", "requested")
 
-        with st.expander(f"Booking #{b_id[:8]} • {b.get('vehicle_model')} • {cur_status.upper()} ({format_inr(b.get('base_trip_fare', 0))})"):
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                st.markdown(f"""
-                - **Student:** {b.get('student_name')} (`{b.get('student_email')}`)
-                - **Driver/Vendor:** {b.get('driver_business') or b.get('driver_name')} (`{b.get('driver_phone')}`)
-                - **Route:** {b.get('pickup_location')} ➔ {b.get('dropoff_location')}
-                - **Scheduled:** {b.get('start_datetime', '')[:16]}
-                - **Notes:** {b.get('special_notes') or 'None'}
-                """)
-            with col2:
-                st.markdown(f"""
-                - **Trip Fare:** {format_inr(b.get('base_trip_fare', 0))} (Direct to driver)
-                - **Platform Fee:** ₹20.00 ({b.get('fee_payment_status', 'paid').upper()})
-                - **Status:** **{cur_status.upper()}**
-                """)
+        with st.expander(f"Booking #{b_id[:6].upper()} • {b.get('vehicle_model')} • {cur_status.upper()} ({format_inr(b.get('base_trip_fare', 0))})"):
+            st.markdown(f"""
+            <strong>Trip Specifications</strong>
+            * **Student:** {b.get('student_name')} (`{b.get('student_email')}`)
+            * **Driver/Vendor:** {b.get('driver_business') or b.get('driver_name')} (`{b.get('driver_phone')}`)
+            * **Route:** {b.get('pickup_location')} ➔ {b.get('dropoff_location')}
+            * **Scheduled:** {b.get('start_datetime', '')[:16]}
+            * **Notes:** {b.get('special_notes') or 'None'}
+            
+            <strong>Financial breakdown & Status</strong>
+            * **Trip Fare:** {format_inr(b.get('base_trip_fare', 0))} (100% Payout to Driver)
+            * **Platform Fee:** ₹20.00 ({b.get('fee_payment_status', 'paid').upper()})
+            * **Status:** **{cur_status.upper()}**
+            """, unsafe_allow_html=True)
 
-                # Admin override status
-                new_status = st.selectbox("Admin Status Override", [s.value for s in BookingStatus], index=[s.value for s in BookingStatus].index(cur_status), key=f"adm_status_sel_{b_id}")
-                if st.button("Apply Status Override", key=f"adm_save_{b_id}"):
-                    BookingService.update_booking_status(b_id, new_status, admin_override=True)
-                    st.success(f"Status overridden to {new_status}")
-                    st.rerun()
+            # Admin override status
+            new_status = st.selectbox("Admin Status Override", [s.value for s in BookingStatus], index=[s.value for s in BookingStatus].index(cur_status), key=f"adm_status_sel_{b_id}")
+            if st.button("Apply Status Override", key=f"adm_save_{b_id}", use_container_width=True, type="primary"):
+                BookingService.update_booking_status(b_id, new_status, admin_override=True)
+                st.success(f"Status overridden to {new_status}")
+                st.rerun()
 
 
 # ============================================================================
@@ -376,18 +387,31 @@ def render_manage_complaints():
             """, unsafe_allow_html=True)
 
             # Admin Resolution Form
-            col1, col2, col3 = st.columns([1.5, 3, 1.2])
-            with col1:
-                status_index = [s.value for s in ComplaintStatus].index(cur_status) if cur_status in [s.value for s in ComplaintStatus] else 0
-                status_sel = st.selectbox("Resolution State", [s.value for s in ComplaintStatus], index=status_index, format_func=lambda x: x.replace("_", " ").title(), key=f"comp_st_{c_id}")
-            with col2:
-                notes_txt = st.text_input("Admin Resolution Notes", value=c.get("admin_notes", ""), placeholder="e.g. Warning issued to driver, full refund processed", key=f"comp_notes_{c_id}")
-            with col3:
-                st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-                if st.button("Update Ticket", key=f"btn_comp_up_{c_id}", type="primary", use_container_width=True):
-                    ComplaintService.update_complaint_status(c_id, status_sel, notes_txt)
-                    st.toast("Dispute resolution updated successfully!", icon="✅")
-                    st.rerun()
+            st.markdown("<strong>🔒 Dispute Action Centre</strong>", unsafe_allow_html=True)
+            status_index = [s.value for s in ComplaintStatus].index(cur_status) if cur_status in [s.value for s in ComplaintStatus] else 0
+            
+            col_sel, col_empty = st.columns([2, 1])
+            with col_sel:
+                status_sel = st.selectbox(
+                    "Change Resolution Status", 
+                    [s.value for s in ComplaintStatus], 
+                    index=status_index, 
+                    format_func=lambda x: x.replace("_", " ").title(), 
+                    key=f"comp_st_{c_id}"
+                )
+            
+            notes_txt = st.text_area(
+                "Resolution Comments / Investigator Notes", 
+                value=c.get("admin_notes", ""), 
+                placeholder="Write detailed notes here. Students will see these comments in their portal.", 
+                key=f"comp_notes_{c_id}",
+                height=100
+            )
+            
+            if st.button("💾 Save Resolution & Comments", key=f"btn_comp_up_{c_id}", type="primary", use_container_width=True):
+                ComplaintService.update_complaint_status(c_id, status_sel, notes_txt)
+                st.toast("Dispute resolution updated successfully!", icon="✅")
+                st.rerun()
 
 
 # ============================================================================
@@ -512,7 +536,7 @@ def render_analytics_dashboard():
             template="plotly_white",
             paper_bgcolor="#FFFFFF",
             plot_bgcolor="#FFFFFF",
-            margin=dict(l=10, r=10, t=10, b=10),
+            margin=dict(l=10, r=10, t=30, b=10),
             height=320
         )
         st.plotly_chart(fig_funnel, use_container_width=True)
@@ -532,7 +556,7 @@ def render_analytics_dashboard():
             template="plotly_white",
             paper_bgcolor="#FFFFFF",
             plot_bgcolor="#FFFFFF",
-            margin=dict(l=10, r=10, t=10, b=10),
+            margin=dict(l=10, r=10, t=30, b=10),
             height=320
         )
         st.plotly_chart(fig_donut, use_container_width=True)
@@ -557,7 +581,7 @@ def render_analytics_dashboard():
             paper_bgcolor="#FFFFFF",
             plot_bgcolor="#FFFFFF",
             yaxis=dict(autorange="reversed"),
-            margin=dict(l=10, r=10, t=10, b=10),
+            margin=dict(l=10, r=10, t=30, b=10),
             height=340
         )
         st.plotly_chart(fig_routes, use_container_width=True)

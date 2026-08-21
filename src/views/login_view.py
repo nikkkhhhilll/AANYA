@@ -13,13 +13,13 @@ def render_login_page():
     # Compact Mobile Header
     st.markdown("""
     <div style="text-align: center; padding: 14px 12px 10px 12px; margin-bottom: 8px;">
-        <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #EFF6FF; border-radius: 14px; margin-bottom: 8px; border: 1px solid #BFDBFE;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--bg-surface); border-radius: 14px; margin-bottom: 8px; border: 1px solid var(--border-subtle);">
             <span style="font-size: 1.5rem;">🚗</span>
         </div>
-        <h1 style="margin: 0; color: #0F172A; font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em;">
-            GIM <span style="color: #2563EB;">Mobility</span>
+        <h1 style="margin: 0; color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em;">
+            Ride <span style="color: #2563EB;">Smart</span>
         </h1>
-        <p style="color: #64748B; font-size: 0.85rem; margin: 4px auto 0 auto; font-weight: 500;">
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 4px auto 0 auto; font-weight: 500;">
             Goa Institute of Management • Campus Rides & Rentals
         </p>
     </div>
@@ -32,9 +32,9 @@ def render_login_page():
     # ====================================================================
     with auth_tabs[0]:
         st.markdown("""
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; margin-top: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-            <div style="color: #0F172A; font-size: 1.05rem; font-weight: 700;">Welcome back</div>
-            <div style="color: #64748B; font-size: 0.8rem;">Select your profile type to sign in.</div>
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 14px 16px; margin-top: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+            <div style="color: var(--text-primary); font-size: 1.05rem; font-weight: 700;">Welcome back</div>
+            <div style="color: var(--text-secondary); font-size: 0.8rem;">Select your profile type to sign in.</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -102,9 +102,9 @@ def render_login_page():
     # ====================================================================
     with auth_tabs[1]:
         st.markdown("""
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; margin-top: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-            <div style="color: #0F172A; font-size: 1.05rem; font-weight: 700;">Create a profile</div>
-            <div style="color: #64748B; font-size: 0.8rem;">Choose your account type below.</div>
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 14px 16px; margin-top: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+            <div style="color: var(--text-primary); font-size: 1.05rem; font-weight: 700;">Create a profile</div>
+            <div style="color: var(--text-secondary); font-size: 0.8rem;">Choose your account type below.</div>
         </div>
         """, unsafe_allow_html=True)
 

@@ -14,7 +14,7 @@ from src.views.admin_view import render_admin_portal
 
 def main():
     st.set_page_config(
-        page_title="GIM Mobility • Campus Rides & Rentals",
+        page_title="Ride Smart • Campus Rides & Rentals",
         page_icon="🚗",
         layout="wide",
         initial_sidebar_state="collapsed"
@@ -57,14 +57,14 @@ def render_sidebar(authenticated: bool = True):
     with st.sidebar:
         st.markdown("""
         <div style="display:flex; align-items:center; gap:10px; padding:12px 0 16px 0;">
-            <div style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; background:#EFF6FF; border-radius:10px; border:1px solid #BFDBFE;">
+            <div style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border-subtle);">
                 <span style="font-size:1.3rem;">🚗</span>
             </div>
             <div>
-                <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:#0F172A; line-height:1.1;">
-                    GIM <span style="color:#2563EB;">Mobility</span>
+                <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:var(--text-primary); line-height:1.1;">
+                    Ride <span style="color:#2563EB;">Smart</span>
                 </h3>
-                <span style="font-size:0.75rem; color:#64748B; font-weight:500;">
+                <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:500;">
                     Sanquelim Campus
                 </span>
             </div>
@@ -88,17 +88,17 @@ def render_sidebar(authenticated: bool = True):
             }.get(user_role, ("👤 User", "#F1F5F9", "#475569"))
 
             st.markdown(f"""
-            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px; margin-bottom:16px; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
+            <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; margin-bottom:16px; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
                 <span style="background:{role_tag[1]}; color:{role_tag[2]}; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.72rem; display:inline-block; margin-bottom:6px;">
                     {role_tag[0]}
                 </span>
-                <div style="font-weight:700; font-size:1.05rem; color:#0F172A; line-height:1.2;">
+                <div style="font-weight:700; font-size:1.05rem; color:var(--text-primary); line-height:1.2;">
                     {user_name}
                 </div>
-                <div style="font-size:0.8rem; color:#64748B; margin-top:2px;">
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">
                     {user_email}
                 </div>
-                <div style="font-size:0.75rem; color:#94A3B8; margin-top:4px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
                     📍 {user_prog}
                 </div>
             </div>

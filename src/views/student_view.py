@@ -24,13 +24,171 @@ def render_student_portal(student: Dict[str, Any]):
     student_id = student.get("id")
     student_name = student.get("full_name", "Student")
     student_program = student.get("program", "PGDM")
+    # Inject Bottom Nav, helper JS, and style to hide top tabs list
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        div[data-baseweb="tab-list"] {
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+        }
+    }
+    </style>
+
+    <div class="mobile-bottom-nav">
+        <button class="mobile-bottom-nav-item" onclick="window.gimSwitchTab(0)" ontouchstart="window.gimSwitchTab(0)" id="nav-item-0">
+            <span class="icon">🚗</span>
+            <span style="font-size: 0.72rem; font-weight:600; display:block;">Book</span>
+        </button>
+        <button class="mobile-bottom-nav-item" onclick="window.gimSwitchTab(1)" ontouchstart="window.gimSwitchTab(1)" id="nav-item-1">
+            <span class="icon">📍</span>
+            <span style="font-size: 0.72rem; font-weight:600; display:block;">Trips</span>
+        </button>
+        <button class="mobile-bottom-nav-item" onclick="window.gimSwitchTab(2)" ontouchstart="window.gimSwitchTab(2)" id="nav-item-2">
+            <span class="icon">💬</span>
+            <span style="font-size: 0.72rem; font-weight:600; display:block;">Support</span>
+        </button>
+    </div>
+    
+    <div id="gim-toast" class="custom-toast">Copied to clipboard!</div>
+    
+    <script>
+    (function() {
+        // Bulletproof text-matching Switch tab helper
+        window.gimSwitchTab = function(index) {
+            const tabNames = ["Book", "Trips", "Support"];
+            const targetText = tabNames[index];
+            
+            let doc = window.document;
+            let buttons = doc.querySelectorAll('button');
+            let foundBtn = null;
+            
+            // Search in local doc first for tab buttons
+            buttons.forEach(btn => {
+                if (btn.innerText && btn.innerText.includes(targetText) && (btn.getAttribute('data-baseweb') === 'tab' || btn.className.includes('tab') || btn.id.includes('tab'))) {
+                    foundBtn = btn;
+                }
+            });
+            
+            // Search in parent doc for tab buttons
+            if (!foundBtn) {
+                let parentButtons = window.parent.document.querySelectorAll('button');
+                parentButtons.forEach(btn => {
+                    if (btn.innerText && btn.innerText.includes(targetText) && (btn.getAttribute('data-baseweb') === 'tab' || btn.className.includes('tab') || btn.id.includes('tab'))) {
+                        foundBtn = btn;
+                    }
+                });
+            }
+            
+            // Fallback to any button containing targetText
+            if (!foundBtn) {
+                buttons.forEach(btn => {
+                    if (btn.innerText && btn.innerText.includes(targetText)) {
+                        foundBtn = btn;
+                    }
+                });
+            }
+            if (!foundBtn) {
+                window.parent.document.querySelectorAll('button').forEach(btn => {
+                    if (btn.innerText && btn.innerText.includes(targetText)) {
+                        foundBtn = btn;
+                    }
+                });
+            }
+
+            if (foundBtn) {
+                foundBtn.click();
+            } else {
+                console.error("Could not find tab button for target: " + targetText);
+            }
+        };
+
+        // Clipboard Copy function
+        window.gimCopyText = function(text, btnElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('gim-toast');
+                if (toast) {
+                    toast.classList.add('show');
+                    setTimeout(() => { toast.classList.remove('show'); }, 2000);
+                }
+                const iconSpan = btnElement.querySelector('.copy-icon');
+                if (iconSpan) {
+                    const original = iconSpan.innerHTML;
+                    iconSpan.innerHTML = '✅';
+                    setTimeout(() => { iconSpan.innerHTML = original; }, 1500);
+                }
+            });
+        };
+
+        // Sync Bottom Nav Active Class with Native Streamlit tabs
+        function syncTabs() {
+            const tabNames = ["Book", "Trips", "Support"];
+            let doc = window.document;
+            let buttons = Array.from(doc.querySelectorAll('button'));
+            let parentButtons = Array.from(window.parent.document.querySelectorAll('button'));
+            let allButtons = buttons.concat(parentButtons);
+            
+            tabNames.forEach((name, index) => {
+                let isSelected = false;
+                allButtons.forEach(btn => {
+                    if (btn.innerText && btn.innerText.includes(name) && (btn.getAttribute('data-baseweb') === 'tab' || btn.className.includes('tab'))) {
+                        if (btn.getAttribute('aria-selected') === 'true' || btn.className.includes('active') || btn.className.includes('selected')) {
+                            isSelected = true;
+                        }
+                    }
+                });
+                
+                const navItem = document.getElementById('nav-item-' + index);
+                if (navItem) {
+                    if (isSelected) {
+                        navItem.classList.add('active');
+                    } else {
+                        navItem.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        setInterval(syncTabs, 300);
+        
+        // Active Card click listener helper
+        function attachCardListeners() {
+            const cardInners = document.querySelectorAll('.gim-vehicle-card-inner');
+            cardInners.forEach(inner => {
+                const wrapper = inner.closest('div[data-testid="element-container"]').parentNode;
+                if (!wrapper) return;
+                
+                // Add styling class
+                wrapper.classList.add('gim-vehicle-card');
+                
+                if (wrapper.dataset.listenerAttached) return;
+                wrapper.dataset.listenerAttached = 'true';
+                
+                wrapper.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                    const selectBtn = wrapper.querySelector('button');
+                    if (selectBtn) {
+                        selectBtn.click();
+                    }
+                });
+            });
+        }
+        
+        setInterval(attachCardListeners, 500);
+    })();
+    </script>
+    """, unsafe_allow_html=True)
 
     # Compact Mobile Hero Header
     st.markdown(f"""
     <div class="gim-hero">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:1.35rem; font-weight:800; color:#FFFFFF; letter-spacing:-0.02em;">GIM Mobility</div>
+                <div style="font-size:1.35rem; font-weight:800; color:#FFFFFF; letter-spacing:-0.02em;">Ride Smart</div>
                 <div style="font-size:0.85rem; color:#DBEAFE; margin-top:2px;">{student_name} • {student_program}</div>
             </div>
             <span style="font-size:0.75rem; background:rgba(255,255,255,0.22); padding:4px 10px; border-radius:9999px; color:#FFFFFF; font-weight:600;">
@@ -65,47 +223,41 @@ def render_student_portal(student: Dict[str, Any]):
         latest_phone = latest.get("provider_phone") or latest.get("driver_phone") or "+91 94220 66778"
         latest_driver = latest.get("business_name") or latest.get("driver_name") or "Verified Driver"
         st.markdown(f"""
-        <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(22, 101, 52, 0.08);">
+        <div style="background: var(--bg-surface); border: 1.5px solid var(--border-subtle); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow-md);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="background: #DCFCE7; color: #166534; font-weight: 700; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">
-                    🟢 Active Pass #{latest['id'][:6]}
+                <span style="background: var(--status-success-bg); color: var(--status-success-text); font-weight: 700; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">
+                    🟢 Active Booking
                 </span>
-                <span style="font-size: 1.15rem; font-weight: 800; color: #15803D;">{format_inr(latest.get('base_trip_fare', 0))}</span>
+                <span style="font-size: 1.15rem; font-weight: 800; color: #10B981;">{format_inr(latest.get('base_trip_fare', 0))}</span>
             </div>
-            <div style="font-size: 1.05rem; font-weight: 700; color: #0F172A; margin: 8px 0 4px 0;">
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 8px 0 4px 0;">
                 📍 {latest.get('pickup_location')} ➔ {latest.get('dropoff_location')}
             </div>
-            <div style="font-size: 0.82rem; color: #475569; line-height: 1.4;">
+            <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">
                 Driver: <strong>{latest_driver}</strong><br/>
                 Vehicle: <strong>{latest.get('vehicle_model')}</strong> ({latest.get('vehicle_number')})
             </div>
-            <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <a href="tel:{latest_phone.replace(' ', '')}" style="display: inline-block; background: #166534; color: #FFFFFF; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-decoration: none;">
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:8px;">
+                <a href="tel:{latest_phone.replace(' ', '')}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-decoration: none;">
                     📞 Call Driver ({latest_phone})
                 </a>
-                <span style="font-size: 0.72rem; color: #166534; font-weight: 600;">✓ Gate 2 Pickup</span>
+                <span style="font-size: 0.72rem; color: var(--status-success-text); font-weight: 600;">✓ Gate 2 Pickup</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-    active_count_str = f"({len(active_bookings)})" if active_bookings else ""
-
     # Mobile Compact Equal-Width Navigation Tabs
-    tab_book, tab_active, tab_history, tab_help = st.tabs([
+    tab_book, tab_trips, tab_help = st.tabs([
         "🚗 Book",
-        f"📍 Active {active_count_str}".strip(),
-        "📜 History",
+        "📍 Trips",
         "💬 Support"
     ])
 
     with tab_book:
         render_booking_section(student)
 
-    with tab_active:
-        render_active_bookings_section(student, active_bookings)
-
-    with tab_history:
-        render_history_section(student)
+    with tab_trips:
+        render_trips_section(student, active_bookings)
 
     with tab_help:
         render_grievance_section(student)
@@ -133,15 +285,10 @@ def render_cab_booking_flow(student: Dict[str, Any]):
     """, unsafe_allow_html=True)
 
     destination_list = DistanceService.get_all_destination_names()
-    route_options = destination_list + ["Custom Destination / Other"]
+    route_options = destination_list
 
-    selected_dest = st.selectbox("Where to?", route_options, index=3, key="cab_dest_sel")
-
-    custom_dest = ""
-    if selected_dest == "Custom Destination / Other":
-        custom_dest = st.text_input("Enter Destination", placeholder="e.g. Mandrem Beach, North Goa", key="cab_custom_dest")
-
-    final_dest = custom_dest.strip() if selected_dest == "Custom Destination / Other" and custom_dest.strip() else selected_dest
+    selected_dest = st.selectbox("Where to?", route_options, index=min(3, len(route_options)-1), key="cab_dest_sel")
+    final_dest = selected_dest
 
     # Log segment selection once
     if st.session_state.get("last_segment") != "Cab":
@@ -163,7 +310,6 @@ def render_cab_booking_flow(student: Dict[str, Any]):
         "Passengers",
         [1, 2, 3, 4, 5, 6],
         index=0,
-        format_func=lambda x: f"{x} Rider" if x == 1 else f"{x} Riders",
         key="cab_pax_count"
     )
 
@@ -220,19 +366,21 @@ def render_cab_booking_flow(student: Dict[str, Any]):
         with st.container(border=True):
             # Card Top Row: Vehicle name & Price
             st.markdown(f"""
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{cab.get('vehicle_model')}</div>
-                    <span style="background:{tier_tag[1]}; color:{tier_tag[2]}; padding:2px 8px; border-radius:9999px; font-size:0.75rem; font-weight:600;">{tier_tag[0]}</span>
-                    <span style="font-size:0.8rem; color:#64748B; margin-left:4px;">💺 {pax_capacity} Seats</span>
+            <div class="gim-vehicle-card-inner" id="cab_card_inner_{cab['id']}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{cab.get('vehicle_model')}</div>
+                        <span style="background:{tier_tag[1]}; color:{tier_tag[2]}; padding:2px 8px; border-radius:9999px; font-size:0.75rem; font-weight:600;">{tier_tag[0]}</span>
+                        <span style="font-size:0.8rem; color:#64748B; margin-left:4px;">💺 {pax_capacity} Seats</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(trip_fare)}</div>
+                        <div style="font-size:0.72rem; color:#64748B;">₹{rate_km:.0f}/km • 0% cut</div>
+                    </div>
                 </div>
-                <div style="text-align:right;">
-                    <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(trip_fare)}</div>
-                    <div style="font-size:0.72rem; color:#64748B;">₹{rate_km:.0f}/km • 0% cut</div>
+                <div style="font-size:0.82rem; color:#475569; margin:6px 0 0 0;">
+                    Driver: <strong>{cab.get('business_name')}</strong> • ⭐ {cab.get('driver_rating', 5.0):.1f} ({cab.get('total_trips', 0)} trips)
                 </div>
-            </div>
-            <div style="font-size:0.82rem; color:#475569; margin:6px 0 10px 0;">
-                Driver: <strong>{cab.get('business_name')}</strong> • ⭐ {cab.get('driver_rating', 5.0):.1f} ({cab.get('total_trips', 0)} trips)
             </div>
             """, unsafe_allow_html=True)
 
@@ -258,12 +406,15 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
     """Mobile-first self-drive car and bike rentals."""
     st.caption("Drive yourself across Goa with transparent hourly rates.")
 
-    chosen_cat = st.selectbox(
-        "1. Vehicle Category",
-        [VehicleCategory.FOUR_WHEELER.value, VehicleCategory.TWO_WHEELER.value],
-        format_func=lambda x: "🚗 4-Wheeler (Cars)" if x == VehicleCategory.FOUR_WHEELER.value else "🛵 2-Wheeler (Bikes & Scooties)",
-        key="sd_cat_sel"
-    )
+    col_c1, col_c2, col_c3 = st.columns(3)
+
+    with col_c1:
+        chosen_cat = st.selectbox(
+            "1. Vehicle Category",
+            [VehicleCategory.FOUR_WHEELER.value, VehicleCategory.TWO_WHEELER.value],
+            format_func=lambda x: "🚗 4-Wheeler (Cars)" if x == VehicleCategory.FOUR_WHEELER.value else "🛵 2-Wheeler (Bikes & Scooties)",
+            key="sd_cat_sel"
+        )
 
     # Log segment selection once
     if st.session_state.get("last_segment") != "Self-Drive":
@@ -286,7 +437,8 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
     else:
         type_options = ["All", VehicleType.SCOOTY.value, VehicleType.BIKE.value]
 
-    chosen_type = st.selectbox("2. Vehicle Type", type_options, key="sd_type_sel")
+    with col_c2:
+        chosen_type = st.selectbox("2. Vehicle Type", type_options, key="sd_type_sel")
 
     if chosen_cat == VehicleCategory.TWO_WHEELER.value:
         pax_options = [1, 2]
@@ -295,13 +447,13 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
     else:
         pax_options = [1, 2, 3, 4, 5]
 
-    pax_count = st.selectbox(
-        "3. Passengers Count",
-        pax_options,
-        index=0,
-        format_func=lambda x: f"{x} Person" if x == 1 else f"{x} Persons",
-        key="sd_pax_filter"
-    )
+    with col_c3:
+        pax_count = st.selectbox(
+            "3. Passengers Count",
+            pax_options,
+            index=0,
+            key="sd_pax_filter"
+        )
 
     # Schedule Duration Picker
     col_d1, col_d2 = st.columns(2)
@@ -352,18 +504,20 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
 
         with st.container(border=True):
             st.markdown(f"""
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{v.get('vehicle_model')}</div>
-                    <span style="font-size:0.8rem; color:#64748B;">💺 {v.get('seating_capacity')} Seats • ⛽ {fuel}</span>
+            <div class="gim-vehicle-card-inner" id="sd_card_inner_{v['id']}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{v.get('vehicle_model')}</div>
+                        <span style="font-size:0.8rem; color:#64748B;">💺 {v.get('seating_capacity')} Seats • ⛽ {fuel}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(total_rent)}</div>
+                        <div style="font-size:0.72rem; color:#64748B;">{format_inr(hourly_rate)}/hr</div>
+                    </div>
                 </div>
-                <div style="text-align:right;">
-                    <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(total_rent)}</div>
-                    <div style="font-size:0.72rem; color:#64748B;">{format_inr(hourly_rate)}/hr</div>
+                <div style="font-size:0.82rem; color:#475569; margin:6px 0 0 0;">
+                    Deposit: {format_inr(deposit)} • Agency: <strong>{v.get('business_name')}</strong>
                 </div>
-            </div>
-            <div style="font-size:0.82rem; color:#475569; margin:6px 0 10px 0;">
-                Deposit: {format_inr(deposit)} • Agency: <strong>{v.get('business_name')}</strong>
             </div>
             """, unsafe_allow_html=True)
 
@@ -427,6 +581,7 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
     st.caption("🔒 0% Driver Commission: 100% fare goes to verified local partner.")
     st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
+
     if st.button("✅ Confirm Booking", use_container_width=True, type="primary"):
         with st.spinner("Confirming..."):
             ok, msg, booking = BookingService.create_booking_request(
@@ -455,9 +610,11 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
                 st.error(msg)
 
 
-def render_active_bookings_section(student: Dict[str, Any], active_bookings: Optional[List[Dict[str, Any]]] = None):
-    """Mobile active ride passes and trip tracking."""
-    st.markdown("### 📍 Active Passes")
+def render_trips_section(student: Dict[str, Any], active_bookings: Optional[List[Dict[str, Any]]] = None):
+    """Combined Trips panel showing Upcoming and Past trips."""
+    
+    # 📆 Upcoming Trip/s
+    st.markdown("### 📆 Upcoming Trip/s")
     if active_bookings is None:
         try:
             active_bookings = BookingService.get_active_bookings_for_student(student["id"])
@@ -465,46 +622,56 @@ def render_active_bookings_section(student: Dict[str, Any], active_bookings: Opt
             active_bookings = []
 
     if not active_bookings:
-        st.info("No active trips right now. Book a ride from the 'Book' tab.")
-        return
+        st.info("No upcoming trips scheduled.")
+    else:
+        for b in active_bookings:
+            b_id = b["id"]
+            status = b.get("booking_status", "confirmed")
+            phone_unmasked = b.get("provider_phone") or b.get("driver_phone") or "+91 94220 66778"
+            driver_name = b.get("driver_business") or b.get("business_name") or b.get("driver_name") or "Verified Driver"
 
-    for b in active_bookings:
-        b_id = b["id"]
-        status = b.get("booking_status", "confirmed")
-        phone_unmasked = b.get("provider_phone") or b.get("driver_phone") or "+91 94220 66778"
-        driver_name = b.get("driver_business") or b.get("business_name") or b.get("driver_name") or "Verified Driver"
+            with st.container(border=True):
+                st.markdown(f"""
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.75rem; text-transform:lowercase;">
+                        🟢 confirmed
+                    </span>
+                    <span style="font-size:1.15rem; font-weight:800; color:#2563EB;">{format_inr(b.get('base_trip_fare', 0))}</span>
+                </div>
+                
+                <div style="margin-bottom: 8px;">
+                    <span style="font-size:0.78rem; color:#64748B;">Pass Code:</span>
+                    <span class="copyable-id" onclick="window.gimCopyText('{b_id[:6].upper()}', this)">#{b_id[:6].upper()} <span class="copy-icon">📋</span></span>
+                </div>
+                
+                <div style="font-size:1.05rem; font-weight:700; color:#0F172A; margin:6px 0 2px 0;">
+                    📍 {b.get('pickup_location')} ➔ {b.get('dropoff_location')}
+                </div>
+                
+                <div style="font-size:0.82rem; color:#475569; line-height:1.4;">
+                    Driver: <strong>{driver_name}</strong><br/>
+                    Vehicle: <strong>{b.get('vehicle_model')}</strong> ({b.get('vehicle_number')})
+                </div>
+                
+                <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <a href="tel:{phone_unmasked.replace(' ', '')}" style="display:inline-block; background:#2563EB; color:#FFFFFF; font-size:0.8rem; font-weight:700; padding:6px 12px; border-radius:8px; text-decoration:none;">
+                        📞 Call Driver
+                    </a>
+                    <span class="copyable-id" onclick="window.gimCopyText('{phone_unmasked}', this)" style="padding:5px 10px; font-size:0.78rem;">
+                        {phone_unmasked} <span class="copy-icon">📋</span>
+                    </span>
+                </div>
+                """, unsafe_allow_html=True)
 
-        with st.container(border=True):
-            st.markdown(f"""
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.75rem;">
-                    🟢 Confirmed Pass
-                </span>
-                <span style="font-size:1.15rem; font-weight:800; color:#2563EB;">{format_inr(b.get('base_trip_fare', 0))}</span>
-            </div>
-            <div style="font-size:1.05rem; font-weight:700; color:#0F172A; margin:6px 0 2px 0;">
-                📍 {b.get('pickup_location')} ➔ {b.get('dropoff_location')}
-            </div>
-            <div style="font-size:0.82rem; color:#475569; line-height:1.4;">
-                Driver: <strong>{driver_name}</strong><br/>
-                Vehicle: <strong>{b.get('vehicle_model')}</strong> ({b.get('vehicle_number')})
-            </div>
-            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
-                <a href="tel:{phone_unmasked.replace(' ', '')}" style="display:inline-block; background:#2563EB; color:#FFFFFF; font-size:0.8rem; font-weight:700; padding:6px 12px; border-radius:8px; text-decoration:none;">
-                    📞 Call Driver ({phone_unmasked})
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
+                if st.button("Cancel Booking", key=f"cancel_{b_id}", use_container_width=True):
+                    BookingService.update_booking_status(b_id, BookingStatus.CANCELLED.value)
+                    st.toast("Ride cancelled successfully.", icon="ℹ️")
+                    st.rerun()
 
-            if st.button("Cancel Pass", key=f"cancel_{b_id}", use_container_width=True):
-                BookingService.update_booking_status(b_id, BookingStatus.CANCELLED.value)
-                st.toast("Ride cancelled successfully.", icon="ℹ️")
-                st.rerun()
+    st.markdown("---")
 
-
-def render_history_section(student: Dict[str, Any]):
-    """Mobile completed trips."""
-    st.markdown("### 📜 Past Trips")
+    # 📜 Past Trip/s
+    st.markdown("### 📜 Past Trip/s")
     try:
         bookings = BookingService.get_student_bookings(student["id"])
         past_bookings = [b for b in bookings if b.get("booking_status") in ("completed", "cancelled")]
@@ -512,20 +679,20 @@ def render_history_section(student: Dict[str, Any]):
         past_bookings = []
 
     if not past_bookings:
-        st.info("No past completed trips found.")
-        return
-
-    for pb in past_bookings:
-        status = pb.get("booking_status", "completed")
-        with st.container(border=True):
-            col_h1, col_h2 = st.columns([3, 1])
-            with col_h1:
-                st.markdown(f"""
-                <strong style="color:#0F172A; font-size:0.95rem;">{pb.get('pickup_location')} ➔ {pb.get('dropoff_location')}</strong><br/>
-                <span style="font-size:0.8rem; color:#64748B;">{pb.get('vehicle_model')} • {pb.get('rental_duration_days_or_hours')}</span>
-                """, unsafe_allow_html=True)
-            with col_h2:
-                st.markdown(f"<div style='text-align:right;'><strong>{format_inr(pb.get('base_trip_fare', 0))}</strong><br/><span style='font-size:0.75rem; color:#64748B;'>{status.title()}</span></div>", unsafe_allow_html=True)
+        st.info("No past trips found.")
+    else:
+        for pb in past_bookings:
+            status = pb.get("booking_status", "completed")
+            with st.container(border=True):
+                col_h1, col_h2 = st.columns([3, 1])
+                with col_h1:
+                    st.markdown(f"""
+                    <strong style="color:#0F172A; font-size:0.95rem;">{pb.get('pickup_location')} ➔ {pb.get('dropoff_location')}</strong><br/>
+                    <span style="font-size:0.8rem; color:#64748B;">{pb.get('vehicle_model')} • {pb.get('rental_duration') or '1.0 hours'}</span>
+                    """, unsafe_allow_html=True)
+                with col_h2:
+                    badge_style = "background:#D1FAE5; color:#065F46;" if status == "completed" else "background:#F3F4F6; color:#374151;"
+                    st.markdown(f"<div style='text-align:right;'><strong>{format_inr(pb.get('base_trip_fare', 0))}</strong><br/><span style='{badge_style} padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:700;'>{status.title()}</span></div>", unsafe_allow_html=True)
 
 
 def render_grievance_section(student: Dict[str, Any]):

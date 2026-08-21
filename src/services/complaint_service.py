@@ -90,8 +90,26 @@ class ComplaintService:
     @staticmethod
     def get_student_complaints(student_id: str) -> List[Dict[str, Any]]:
         """Fetch grievances raised by a specific student."""
-        all_c = ComplaintService.get_all_complaints()
-        return [c for c in all_c if c.get("raised_by_id") == student_id]
+        complaints = DBService.query("complaints", filters={"raised_by_id": student_id}, order_by="-created_at")
+        profiles = {p["id"]: p for p in DBService.query("profiles")}
+        bookings = {b["id"]: b for b in DBService.query("bookings")}
+        
+        enriched = []
+        for c in complaints:
+            item = dict(c)
+            raised_by = profiles.get(c.get("raised_by_id"), {})
+            target = profiles.get(c.get("target_user_id"), {})
+            booking = bookings.get(c.get("booking_id"), {})
+
+            item["raised_by_name"] = raised_by.get("full_name", "Unknown")
+            item["raised_by_email"] = raised_by.get("email", "")
+            item["raised_by_phone"] = raised_by.get("phone", "")
+            item["target_name"] = target.get("full_name", "N/A")
+            item["service_segment"] = booking.get("service_segment", "N/A")
+            item["pickup_location"] = booking.get("pickup_location", "N/A")
+            item["dropoff_location"] = booking.get("dropoff_location", "N/A")
+            enriched.append(item)
+        return enriched
 
     @staticmethod
     def update_complaint_status(

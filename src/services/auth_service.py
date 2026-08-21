@@ -164,7 +164,7 @@ class AuthService:
 
         try:
             DBService.insert("profiles", profile_data)
-            return True, f"Welcome to GIM Mobility, {full_name.strip()}! Registration successful.", profile_data
+            return True, f"Welcome to Ride Smart, {full_name.strip()}! Registration successful.", profile_data
         except Exception as e:
             return False, f"Registration failed: {e}", None
 
