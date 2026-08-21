@@ -13,6 +13,7 @@ from src.services.vehicle_service import VehicleService
 from src.services.booking_service import BookingService
 from src.services.complaint_service import ComplaintService
 from src.services.analytics_service import AnalyticsService
+from src.services.pricing_service import PricingService
 
 
 def render_admin_portal(admin_user: Dict[str, Any]):
@@ -38,14 +39,15 @@ def render_admin_portal(admin_user: Dict[str, Any]):
     </div>
     """, unsafe_allow_html=True)
 
-    # 6 Management Tabs
-    tab_students, tab_drivers, tab_bookings, tab_complaints, tab_ratings, tab_analytics = st.tabs([
+    # 7 Management Tabs
+    tab_students, tab_drivers, tab_bookings, tab_complaints, tab_ratings, tab_analytics, tab_pricing = st.tabs([
         "👥 Manage Students",
         "🚗 Manage Drivers & KYC",
         "📋 Manage Bookings",
         "⚖️ Manage Complaints",
         "⭐ Ratings & Leaderboard",
-        "📊 Interactive Analytics"
+        "📊 Interactive Analytics",
+        "💰 Pricing & Fare Settings"
     ])
 
     with tab_students:
@@ -65,6 +67,9 @@ def render_admin_portal(admin_user: Dict[str, Any]):
 
     with tab_analytics:
         render_analytics_dashboard()
+
+    with tab_pricing:
+        render_manage_pricing()
 
 
 # ============================================================================
@@ -158,6 +163,102 @@ def render_manage_drivers():
                     VehicleService.update_provider_verification(d_id, verify_toggle)
                     st.toast(f"Vendor verification updated to: {'Verified' if verify_toggle else 'Unverified'}")
                     st.rerun()
+    # ================= Global Fleet Inventory Control =================
+    st.markdown("---")
+    st.markdown("### 🚙 Global Fleet Inventory Control")
+    st.caption("View, edit, or remove any vehicle registered on the GIM Mobility Platform.")
+    
+    try:
+        all_vehicles = VehicleService.get_all_vehicles()
+    except Exception:
+        all_vehicles = []
+        
+    if not all_vehicles:
+        st.info("No vehicles registered on the platform.")
+    else:
+        for v in all_vehicles:
+            v_id = v["id"]
+            owner = v.get("business_name") or v.get("provider_name") or "Local Partner"
+            
+            with st.container(border=True):
+                col_v1, col_v2, col_v3 = st.columns([3, 1.5, 1.2])
+                with col_v1:
+                    st.markdown(f"""
+                    <strong style="font-size:1.05rem; color:#0F172A;">{v.get('vehicle_model')}</strong> ({v.get('vehicle_number')})<br/>
+                    <span style="font-size:0.8rem; color:#64748B;">Owner: {owner} | Segment: {v.get('service_segment')} | Category: {v.get('vehicle_category')} | Seats: {v.get('seating_capacity')}</span>
+                    """, unsafe_allow_html=True)
+                with col_v2:
+                    if st.button("✏️ Edit Vehicle", key=f"adm_edit_v_{v_id}", use_container_width=True):
+                        show_edit_vehicle_dialog(v)
+                with col_v3:
+                    if st.button("🗑️ Delete", key=f"adm_del_v_{v_id}", type="secondary", use_container_width=True):
+                        if VehicleService.delete_vehicle(v_id):
+                            st.toast("Vehicle deleted from system.")
+                            st.rerun()
+                        else:
+                            st.error("Failed to delete vehicle.")
+
+
+@st.dialog("✏️ Edit Vehicle Record", width="small")
+def show_edit_vehicle_dialog(vehicle: Dict[str, Any]):
+    st.markdown(f"**Vehicle ID:** `{vehicle['id'][:8].upper()}`")
+    
+    with st.form("edit_vehicle_form"):
+        v_model = st.text_input("Vehicle Model", value=vehicle.get("vehicle_model", ""))
+        v_number = st.text_input("Registration Number", value=vehicle.get("vehicle_number", ""))
+        v_seats = st.number_input("Seating Capacity", min_value=1, max_value=8, value=int(vehicle.get("seating_capacity", 4)))
+        
+        segment = vehicle.get("service_segment", "Cab")
+        category = vehicle.get("vehicle_category", "Cab")
+        v_type = vehicle.get("vehicle_type", "Sedan")
+        
+        pricing = vehicle.get("pricing_details", {})
+        if not isinstance(pricing, dict):
+            pricing = {}
+
+        if segment == "Self-Drive":
+            sd_fuel = st.selectbox("Fuel Type", ["Petrol", "Diesel", "EV"], index=["Petrol", "Diesel", "EV"].index(pricing.get("fuel_type", "Petrol")))
+            st.caption("💡 Pricing is locked. Fares are calculated dynamically from global settings.")
+        else:
+            st.caption("💡 Cab pricing is managed globally by administrative configuration.")
+
+        save_changes = st.form_submit_button("Save Changes", type="primary", use_container_width=True)
+        if save_changes:
+            if not v_model.strip() or not v_number.strip():
+                st.error("Please fill in all fields.")
+            else:
+                # Dynamically resolve current global pricing payload
+                if segment == "Self-Drive":
+                    sd_rates = PricingService.get_self_drive_hourly_rates()
+                    rate = sd_rates.get(v_type, 70.0)
+                    pricing_payload = {
+                        "hourly_rate": rate,
+                        "security_deposit": 1500.0,
+                        "fuel_type": sd_fuel
+                    }
+                else:
+                    cab_rules = PricingService.get_cab_fare_rules()
+                    rule = cab_rules.get(v_type, cab_rules.get("Sedan", {"base_fare": 80.0, "rate_per_km": 22.0}))
+                    pricing_payload = {
+                        "base_fare": rule.get("base_fare", 80.0),
+                        "rate_per_km": rule.get("rate_per_km", 22.0)
+                    }
+
+                ok = VehicleService.update_vehicle(
+                    vehicle_id=vehicle["id"],
+                    service_segment=segment,
+                    vehicle_category=category,
+                    vehicle_type=v_type,
+                    vehicle_model=v_model,
+                    vehicle_number=v_number,
+                    seating_capacity=v_seats,
+                    pricing_details=pricing_payload
+                )
+                if ok:
+                    st.toast("Vehicle record updated successfully!", icon="🎉")
+                    st.rerun()
+                else:
+                    st.error("Failed to update vehicle record.")
 
 
 # ============================================================================
@@ -465,3 +566,79 @@ def render_analytics_dashboard():
         st.markdown("#### ⚡ Real-Time User Clickstream & Telemetry Feed")
         event_df = AnalyticsService.get_live_event_stream(limit=10)
         st.dataframe(event_df, use_container_width=True, height=300, hide_index=True)
+
+
+def render_manage_pricing():
+    st.markdown("### 💰 Campus Pricing & Base Fares Administrator")
+    st.caption("Configure the flat/tiered fare structures for campus cabs and self-drive rentals.")
+
+    # Load current pricing config
+    cab_rules = PricingService.get_cab_fare_rules()
+    self_drive_rates = PricingService.get_self_drive_hourly_rates()
+
+    st.markdown("---")
+    
+    col_p1, col_p2 = st.columns(2)
+    
+    # 🚖 CAB PRICING RULES FORM
+    with col_p1:
+        st.markdown("#### 🚖 Campus Cab Fare Rules")
+        st.caption("Used dynamically based on distance calculations originating/terminating at GIM Gate 2.")
+        
+        updated_cab_rules = {}
+        for tier, rule in cab_rules.items():
+            st.markdown(f"**{tier} Class**")
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                base = st.number_input(
+                    f"Base Fare (₹) - {tier}",
+                    min_value=0.0,
+                    max_value=1000.0,
+                    value=float(rule.get("base_fare", 80.0)),
+                    key=f"cab_base_{tier}"
+                )
+            with col_t2:
+                rate = st.number_input(
+                    f"Rate per Km (₹) - {tier}",
+                    min_value=0.0,
+                    max_value=200.0,
+                    value=float(rule.get("rate_per_km", 22.0)),
+                    key=f"cab_rate_{tier}"
+                )
+            updated_cab_rules[tier] = {"base_fare": base, "rate_per_km": rate}
+            
+    # 🛵 SELF-DRIVE RENTAL RATES FORM
+    with col_p2:
+        st.markdown("#### 🛵 Self-Drive Rental Hourly Rates")
+        st.caption("Flat rate charged per hour of rental duration for cars, bikes, and scooties.")
+        
+        updated_self_drive_rates = {}
+        for vehicle_type, current_rate in self_drive_rates.items():
+            icon = {
+                "SUV": "🚗",
+                "Sedan": "🚗",
+                "Hatchback": "🚗",
+                "Bike": "🛵",
+                "Scooty": "🛵"
+            }.get(vehicle_type, "🚙")
+            
+            rate = st.number_input(
+                f"{icon} {vehicle_type} Rate (₹/hour)",
+                min_value=0.0,
+                max_value=1000.0,
+                value=float(current_rate),
+                key=f"sd_rate_{vehicle_type}"
+            )
+            updated_self_drive_rates[vehicle_type] = rate
+
+    st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
+    
+    save_pricing = st.button("💾 Save Global Pricing Settings", type="primary", use_container_width=True)
+    
+    if save_pricing:
+        ok = PricingService.update_pricing(updated_cab_rules, updated_self_drive_rates)
+        if ok:
+            st.toast("Pricing updated successfully across GIM!", icon="🎉")
+            st.rerun()
+        else:
+            st.error("Failed to save pricing configuration changes.")

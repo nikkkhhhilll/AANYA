@@ -109,6 +109,45 @@ class VehicleService:
         return [v for v in VehicleService.get_all_vehicles() if v.get("provider_id") == provider_id]
 
     @staticmethod
+    def get_provider_vehicles(provider_id: str) -> List[Dict[str, Any]]:
+        """Alias for get_vehicles_by_provider to support provider views."""
+        return VehicleService.get_vehicles_by_provider(provider_id)
+
+    @staticmethod
+    def delete_vehicle(vehicle_id: str) -> bool:
+        """Remove a vehicle from the fleet database."""
+        try:
+            return DBService.delete("vehicles", vehicle_id)
+        except Exception:
+            return False
+
+    @staticmethod
+    def update_vehicle(
+        vehicle_id: str,
+        service_segment: str,
+        vehicle_category: str,
+        vehicle_type: str,
+        vehicle_model: str,
+        vehicle_number: str,
+        seating_capacity: int,
+        pricing_details: Dict[str, Any]
+    ) -> bool:
+        """Update existing vehicle registration details."""
+        updates = {
+            "service_segment": service_segment,
+            "vehicle_category": vehicle_category,
+            "vehicle_type": vehicle_type,
+            "vehicle_model": vehicle_model.strip(),
+            "vehicle_number": vehicle_number.strip().upper(),
+            "seating_capacity": seating_capacity,
+            "pricing_details": pricing_details
+        }
+        try:
+            return DBService.update("vehicles", vehicle_id, updates)
+        except Exception:
+            return False
+
+    @staticmethod
     def add_vehicle(
         provider_id: str,
         service_segment: str,

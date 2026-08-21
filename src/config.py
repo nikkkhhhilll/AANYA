@@ -80,11 +80,9 @@ CAMPUS_PINCODE = "403505"
 
 GIM_PROGRAMS = [
     "PGDM Core",
-    "BDA (Big Data Analytics)",
-    "HCM (Healthcare Mgmt)",
-    "BIFS (Banking & Finance)",
-    "FPM / Fellow",
-    "Executive MBA",
+    "PGDM BDA",
+    "PGDM HCM",
+    "PGDM BIFS"
 ]
 
 # OpenStreetMap Tiered Cab Pricing Formulas
@@ -92,7 +90,7 @@ CAB_FARE_RULES: Dict[str, Dict[str, float]] = {
     "Hatchback": {"base_fare": 60.0, "rate_per_km": 20.0},
     "Sedan": {"base_fare": 80.0, "rate_per_km": 22.0},
     "SUV": {"base_fare": 100.0, "rate_per_km": 25.0},
-    "Standard Cab": {"base_fare": 80.0, "rate_per_km": 22.0},
+
 }
 
 # Self-Drive Flat Hourly Rates

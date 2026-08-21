@@ -133,7 +133,9 @@ class DistanceService:
         elif "Sedan" in vehicle_type or "Dzire" in vehicle_type or "City" in vehicle_type:
             tier = "Sedan"
 
-        rule = CAB_FARE_RULES.get(tier, CAB_FARE_RULES["Sedan"])
+        from src.services.pricing_service import PricingService
+        cab_rules = PricingService.get_cab_fare_rules()
+        rule = cab_rules.get(tier, cab_rules.get("Sedan", {"base_fare": 80.0, "rate_per_km": 22.0}))
         base_fare = rule["base_fare"]
         rate_per_km = rule["rate_per_km"]
 

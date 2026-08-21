@@ -12,7 +12,7 @@ from src.config import (
 )
 from src.services.vehicle_service import VehicleService
 from src.services.booking_service import BookingService
-from src.services.analytics_service import AnalyticsService
+from src.services.pricing_service import PricingService
 
 
 def render_provider_portal(provider: Dict[str, Any]):
@@ -157,25 +157,116 @@ def render_fleet_management(provider_id: str):
 
     if not vehicles:
         st.info("No vehicles registered under your profile yet.")
-        return
+    else:
+        for v in vehicles:
+            v_id = v["id"]
+            is_avail = bool(v.get("is_available", True))
 
-    for v in vehicles:
-        v_id = v["id"]
-        is_avail = bool(v.get("is_available", True))
+            with st.container(border=True):
+                col_f1, col_f2, col_f3 = st.columns([3, 1.5, 1.2])
+                with col_f1:
+                    st.markdown(f"""
+                    <strong style="font-size:1.05rem; color:#0F172A;">{v.get('vehicle_model')}</strong> ({v.get('vehicle_number')})<br/>
+                    <span style="font-size:0.8rem; color:#64748B;">Segment: {v.get('service_segment')} • Cat: {v.get('vehicle_category')} • Type: {v.get('vehicle_type')} • {v.get('seating_capacity')} Seats</span>
+                    """, unsafe_allow_html=True)
+                with col_f2:
+                    new_v_avail = st.toggle("Active", value=is_avail, key=f"v_toggle_{v_id}")
+                    if new_v_avail != is_avail:
+                        VehicleService.toggle_vehicle_availability(v_id, new_v_avail)
+                        st.toast(f"Vehicle {'enabled' if new_v_avail else 'disabled'}")
+                        st.rerun()
+                with col_f3:
+                    if st.button("🗑️ Remove", key=f"v_del_{v_id}", type="secondary", use_container_width=True):
+                        if VehicleService.delete_vehicle(v_id):
+                            st.toast("Vehicle removed successfully")
+                            st.rerun()
+                        else:
+                            st.error("Failed to remove vehicle.")
 
-        col_f1, col_f2 = st.columns([3, 1])
-        with col_f1:
-            st.markdown(f"""
-            <strong>{v.get('vehicle_model')}</strong> ({v.get('vehicle_number')})<br/>
-            <span style="font-size:0.8rem; color:#64748B;">Category: {v.get('vehicle_category')} • Type: {v.get('vehicle_type')} • {v.get('seating_capacity')} Seats</span>
-            """, unsafe_allow_html=True)
-        with col_f2:
-            new_v_avail = st.toggle("Active", value=is_avail, key=f"v_toggle_{v_id}")
-            if new_v_avail != is_avail:
-                VehicleService.update_vehicle_availability(v_id, new_v_avail)
-                st.toast(f"Vehicle {'enabled' if new_v_avail else 'disabled'}")
-                st.rerun()
-        st.divider()
+    st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
+
+    # ➕ Expandable Register Vehicle Form
+    with st.expander("➕ Register New Vehicle to Fleet", expanded=False):
+        segment_choice = st.selectbox(
+            "Service Segment",
+            [ServiceSegment.CAB.value, ServiceSegment.SELF_DRIVE.value],
+            key="add_v_segment"
+        )
+        
+        # Cascading category selection based on segment
+        if segment_choice == ServiceSegment.CAB.value:
+            cat_options = [VehicleCategory.CAB.value]
+        else:
+            cat_options = [VehicleCategory.FOUR_WHEELER.value, VehicleCategory.TWO_WHEELER.value]
+            
+        category_choice = st.selectbox("Vehicle Category", cat_options, key="add_v_category")
+
+        # Cascading type selection based on category
+        if category_choice == VehicleCategory.CAB.value:
+            type_options = [VehicleType.HATCHBACK.value, VehicleType.SEDAN.value, VehicleType.SUV.value]
+        elif category_choice == VehicleCategory.FOUR_WHEELER.value:
+            type_options = [VehicleType.HATCHBACK.value, VehicleType.SEDAN.value, VehicleType.SUV.value]
+        else:
+            type_options = [VehicleType.SCOOTY.value, VehicleType.BIKE.value]
+
+        type_choice = st.selectbox("Vehicle Type", type_options, key="add_v_type")
+
+        v_model = st.text_input("Vehicle Model Name", placeholder="e.g. Maruti Suzuki Swift, Honda Activa", key="add_v_model")
+        v_number = st.text_input("Registration Number", placeholder="e.g. GA-03-K-1234", key="add_v_number")
+        
+        # Default seat capacities
+        def_seats = 4
+        if category_choice == VehicleCategory.TWO_WHEELER.value:
+            def_seats = 2
+        v_seats = st.number_input("Seating Capacity", min_value=1, max_value=8, value=def_seats, key="add_v_seats")
+
+        # Segment-specific details
+        if segment_choice == ServiceSegment.SELF_DRIVE.value:
+            sd_fuel = st.selectbox("Fuel Type", ["Petrol", "Diesel", "EV"], key="add_v_fuel")
+            st.caption("💡 Self-drive pricing rules are fixed globally by GIM Transport Administration.")
+        else:
+            st.info("💡 Cabs use GIM pre-negotiated route fares. Pricing is managed by GIM Administration.")
+
+        register_submit = st.button("Register Vehicle", type="primary", use_container_width=True)
+
+        if register_submit:
+            if not v_model.strip():
+                st.error("Please enter the vehicle model name.")
+            elif not v_number.strip():
+                st.error("Please enter the registration number.")
+            else:
+                # Dynamically populate pricing payload using global GIM config
+                if segment_choice == ServiceSegment.SELF_DRIVE.value:
+                    sd_rates = PricingService.get_self_drive_hourly_rates()
+                    rate = sd_rates.get(type_choice, 70.0)
+                    pricing_payload = {
+                        "hourly_rate": rate,
+                        "security_deposit": 1500.0,
+                        "fuel_type": sd_fuel
+                    }
+                else:
+                    cab_rules = PricingService.get_cab_fare_rules()
+                    rule = cab_rules.get(type_choice, cab_rules.get("Sedan", {"base_fare": 80.0, "rate_per_km": 22.0}))
+                    pricing_payload = {
+                        "base_fare": rule.get("base_fare", 80.0),
+                        "rate_per_km": rule.get("rate_per_km", 22.0)
+                    }
+
+                success, msg, _ = VehicleService.add_vehicle(
+                    provider_id=provider_id,
+                    service_segment=segment_choice,
+                    vehicle_category=category_choice,
+                    vehicle_type=type_choice,
+                    vehicle_model=v_model,
+                    vehicle_number=v_number,
+                    seating_capacity=v_seats,
+                    pricing_details=pricing_payload
+                )
+                if success:
+                    st.toast("Vehicle added to fleet successfully!", icon="🎉")
+                    st.rerun()
+                else:
+                    st.error(msg)
 
 
 def render_earnings_tab(provider_id: str):

@@ -169,6 +169,14 @@ class LocalDatabaseEngine:
         );
         """)
 
+        # 9. System Settings
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS system_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+        """)
+
         self._populate_seed_data(cur)
         self.conn.commit()
 
@@ -288,6 +296,23 @@ class LocalDatabaseEngine:
             ('88888888-8888-8888-8888-888888888812', '11111111-1111-1111-1111-111111111105', 'booking_abandoned', json.dumps({"reason": "payment_timeout", "step": "upi_fee"}), now),
         ]
         cur.executemany("INSERT OR REPLACE INTO analytics_events VALUES (?,?,?,?,?)", analytics_data)
+
+        # Seed default pricing settings
+        default_pricing = {
+            "cab_fare_rules": {
+                "Hatchback": {"base_fare": 60.0, "rate_per_km": 20.0},
+                "Sedan": {"base_fare": 80.0, "rate_per_km": 22.0},
+                "SUV": {"base_fare": 100.0, "rate_per_km": 25.0}
+            },
+            "self_drive_hourly_rates": {
+                "SUV": 105.0,
+                "Sedan": 70.0,
+                "Hatchback": 70.0,
+                "Bike": 55.0,
+                "Scooty": 40.0
+            }
+        }
+        cur.execute("INSERT OR REPLACE INTO system_settings VALUES (?, ?)", ("pricing_config", json.dumps(default_pricing)))
 
 
 @st.cache_resource

@@ -9,8 +9,9 @@ import pandas as pd
 from typing import Dict, Any, List, Optional
 from src.config import (
     ServiceSegment, VehicleCategory, VehicleType, BookingStatus,
-    ComplaintType, PLATFORM_CONVENIENCE_FEE, format_inr, SELF_DRIVE_HOURLY_RATES
+    ComplaintType, PLATFORM_CONVENIENCE_FEE, format_inr
 )
+from src.services.pricing_service import PricingService
 from src.services.vehicle_service import VehicleService
 from src.services.booking_service import BookingService
 from src.services.complaint_service import ComplaintService
@@ -341,7 +342,8 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
 
     for v in vehicles:
         v_type = v.get("vehicle_type", "Hatchback")
-        hourly_rate = SELF_DRIVE_HOURLY_RATES.get(v_type, 70.0)
+        self_drive_rates = PricingService.get_self_drive_hourly_rates()
+        hourly_rate = self_drive_rates.get(v_type, 70.0)
         total_rent = duration_hours * hourly_rate
 
         pricing_info = v.get("pricing_details", {})
