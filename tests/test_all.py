@@ -174,6 +174,10 @@ class TestGIMMobilityPlatform(unittest.TestCase):
         )
         self.assertTrue(up_ok)
 
+        # Clean up
+        if comp and "id" in comp:
+            DBService.delete("complaints", comp["id"])
+
     def test_06_analytics_service(self):
         """Verify analytics funnel, route popularity, and financial summary."""
         funnel = AnalyticsService.get_funnel_metrics()

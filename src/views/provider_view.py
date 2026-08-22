@@ -119,15 +119,15 @@ def render_dispatch_queue(provider_id: str):
         status = trip.get("booking_status", "confirmed")
         with st.container(border=True):
             st.markdown(f"""
-            <div style="font-size:1.15rem; font-weight:700; color:#0F172A;">📍 {trip.get('pickup_location')} ➔ {trip.get('dropoff_location')}</div>
+            <div style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">📍 {trip.get('pickup_location')} ➔ {trip.get('dropoff_location')}</div>
             <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
-                <div style="font-size:0.85rem; color:#64748B;">
+                <div style="font-size:0.85rem; color:var(--text-secondary);">
                     Student: <strong>{trip.get('student_name', 'Student')}</strong> (📞 {trip.get('student_phone', '')})<br/>
                     Vehicle: <strong>{trip.get('vehicle_model')}</strong> ({trip.get('vehicle_number')})
                 </div>
                 <div style="text-align:right;">
                     <div style="font-size:1.3rem; font-weight:800; color:#059669;">{format_inr(trip.get('base_trip_fare', 0))}</div>
-                    <span style="font-size:0.75rem; color:#64748B;">100% Payout</span>
+                    <span style="font-size:0.75rem; color:var(--text-secondary);">100% Payout</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -177,8 +177,8 @@ def render_fleet_management(provider_id: str):
                 col_f1, col_f2, col_f3 = st.columns([3, 1.5, 1.2])
                 with col_f1:
                     st.markdown(f"""
-                    <strong style="font-size:1.05rem; color:#0F172A;">{v.get('vehicle_model')}</strong> ({v.get('vehicle_number')})<br/>
-                    <span style="font-size:0.8rem; color:#64748B;">Segment: {v.get('service_segment')} • Cat: {v.get('vehicle_category')} • Type: {v.get('vehicle_type')} • {v.get('seating_capacity')} Seats</span>
+                    <strong style="font-size:1.05rem; color:var(--text-primary);">{v.get('vehicle_model')}</strong> ({v.get('vehicle_number')})<br/>
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">Segment: {v.get('service_segment')} • Cat: {v.get('vehicle_category')} • Type: {v.get('vehicle_type')} • {v.get('seating_capacity')} Seats</span>
                     """, unsafe_allow_html=True)
                 with col_f2:
                     new_v_avail = st.toggle("Active", value=is_avail, key=f"v_toggle_{v_id}")

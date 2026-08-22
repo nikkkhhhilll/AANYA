@@ -191,10 +191,10 @@ CUSTOM_CSS = """
 /* Global Clean Mobile-First Canvas */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [class*="css"] {
+html, body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--text-primary);
-    background-color: var(--bg-main) !important;
+    background-color: var(--bg-main);
 }
 
 /* Mobile-First Full Width Container (No wasted margin) */
@@ -209,7 +209,7 @@ html, body, [class*="css"] {
 
 /* Streamlit Header clean adjust */
 header[data-testid="stHeader"] {
-    background-color: rgba(248, 250, 252, 0.9) !important;
+    background-color: transparent !important;
     backdrop-filter: blur(8px) !important;
     height: 2.8rem !important;
 }
@@ -242,63 +242,13 @@ header[data-testid="stHeader"] {
 }
 .gim-vehicle-card.active-card {
     border-color: var(--brand-accent) !important;
-    background-color: #EFF6FF !important; /* Soft brand accent tint */
+    background-color: rgba(37, 99, 235, 0.12) !important; /* Dynamic blue tint across light/dark modes */
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15), var(--shadow-md) !important;
-}
-
-/* Mobile App-like Bottom Navigation Dock */
-.mobile-bottom-nav {
-    display: none !important;
 }
 
 @media (max-width: 768px) {
     /* Hide normal Streamlit footer if any */
     footer { display: none !important; }
-    
-    /* Make space for the bottom nav bar */
-    .main .block-container {
-        padding-bottom: 85px !important;
-    }
-    
-    .mobile-bottom-nav {
-        display: flex !important;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 64px;
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(12px) saturate(180%);
-        -webkit-backdrop-filter: blur(12px) saturate(180%);
-        border-top: 1px solid var(--border-subtle) !important;
-        box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.08);
-        z-index: 9999999 !important;
-        pointer-events: auto !important;
-        justify-content: space-around;
-        align-items: center;
-        padding: 0 10px;
-    }
-    
-    .mobile-bottom-nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        font-size: 0.72rem;
-        font-weight: 500;
-        cursor: pointer;
-        padding: 6px 0;
-        flex: 1;
-        transition: all 0.15s ease;
-    }
-    
-    .mobile-bottom-nav-item.active {
-        color: var(--brand-accent) !important;
-        font-weight: 700;
-    }
 }
 
 /* Clipboard Copy Styling */
@@ -408,7 +358,11 @@ button[kind="secondary"], .stButton > button[kind="secondary"] {
     width: 100% !important;
 }
 
-/* Mobile-Optimized Tab Bar (Equal Width, No Horizontal Scroll) */
+/* Mobile-Optimized Tab Bar (Equal Width distributed evenly across the screen) */
+div[data-testid="stTabs"] {
+    width: 100% !important;
+}
+
 div[data-baseweb="tab-list"] {
     display: flex !important;
     width: 100% !important;
@@ -421,9 +375,10 @@ div[data-baseweb="tab-list"] {
 }
 
 div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
-    flex: 1 1 0 !important;
+    flex: 1 1 0px !important;
     min-width: 0 !important;
-    padding: 8px 6px !important;
+    width: 100% !important;
+    padding: 10px 6px !important;
     font-size: 0.82rem !important;
     font-weight: 600 !important;
     text-align: center !important;

@@ -24,89 +24,12 @@ def render_student_portal(student: Dict[str, Any]):
     student_id = student.get("id")
     student_name = student.get("full_name", "Student")
     student_program = student.get("program", "PGDM")
-    # Inject Bottom Nav, helper JS, and style to hide top tabs list
+    # Inject helper JS (Clipboard Copy & Card Click Listeners)
     st.markdown("""
-    <style>
-    @media (max-width: 768px) {
-        div[data-baseweb="tab-list"] {
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-            width: 1px !important;
-            height: 1px !important;
-            overflow: hidden !important;
-        }
-    }
-    </style>
-
-    <div class="mobile-bottom-nav">
-        <button class="mobile-bottom-nav-item" onclick="window.gimSwitchTab(0)" ontouchstart="window.gimSwitchTab(0)" id="nav-item-0">
-            <span class="icon">🚗</span>
-            <span style="font-size: 0.72rem; font-weight:600; display:block;">Book</span>
-        </button>
-        <button class="mobile-bottom-nav-item" onclick="window.gimSwitchTab(1)" ontouchstart="window.gimSwitchTab(1)" id="nav-item-1">
-            <span class="icon">📍</span>
-            <span style="font-size: 0.72rem; font-weight:600; display:block;">Trips</span>
-        </button>
-        <button class="mobile-bottom-nav-item" onclick="window.gimSwitchTab(2)" ontouchstart="window.gimSwitchTab(2)" id="nav-item-2">
-            <span class="icon">💬</span>
-            <span style="font-size: 0.72rem; font-weight:600; display:block;">Support</span>
-        </button>
-    </div>
-    
     <div id="gim-toast" class="custom-toast">Copied to clipboard!</div>
     
     <script>
     (function() {
-        // Bulletproof text-matching Switch tab helper
-        window.gimSwitchTab = function(index) {
-            const tabNames = ["Book", "Trips", "Support"];
-            const targetText = tabNames[index];
-            
-            let doc = window.document;
-            let buttons = doc.querySelectorAll('button');
-            let foundBtn = null;
-            
-            // Search in local doc first for tab buttons
-            buttons.forEach(btn => {
-                if (btn.innerText && btn.innerText.includes(targetText) && (btn.getAttribute('data-baseweb') === 'tab' || btn.className.includes('tab') || btn.id.includes('tab'))) {
-                    foundBtn = btn;
-                }
-            });
-            
-            // Search in parent doc for tab buttons
-            if (!foundBtn) {
-                let parentButtons = window.parent.document.querySelectorAll('button');
-                parentButtons.forEach(btn => {
-                    if (btn.innerText && btn.innerText.includes(targetText) && (btn.getAttribute('data-baseweb') === 'tab' || btn.className.includes('tab') || btn.id.includes('tab'))) {
-                        foundBtn = btn;
-                    }
-                });
-            }
-            
-            // Fallback to any button containing targetText
-            if (!foundBtn) {
-                buttons.forEach(btn => {
-                    if (btn.innerText && btn.innerText.includes(targetText)) {
-                        foundBtn = btn;
-                    }
-                });
-            }
-            if (!foundBtn) {
-                window.parent.document.querySelectorAll('button').forEach(btn => {
-                    if (btn.innerText && btn.innerText.includes(targetText)) {
-                        foundBtn = btn;
-                    }
-                });
-            }
-
-            if (foundBtn) {
-                foundBtn.click();
-            } else {
-                console.error("Could not find tab button for target: " + targetText);
-            }
-        };
-
         // Clipboard Copy function
         window.gimCopyText = function(text, btnElement) {
             navigator.clipboard.writeText(text).then(() => {
@@ -123,37 +46,6 @@ def render_student_portal(student: Dict[str, Any]):
                 }
             });
         };
-
-        // Sync Bottom Nav Active Class with Native Streamlit tabs
-        function syncTabs() {
-            const tabNames = ["Book", "Trips", "Support"];
-            let doc = window.document;
-            let buttons = Array.from(doc.querySelectorAll('button'));
-            let parentButtons = Array.from(window.parent.document.querySelectorAll('button'));
-            let allButtons = buttons.concat(parentButtons);
-            
-            tabNames.forEach((name, index) => {
-                let isSelected = false;
-                allButtons.forEach(btn => {
-                    if (btn.innerText && btn.innerText.includes(name) && (btn.getAttribute('data-baseweb') === 'tab' || btn.className.includes('tab'))) {
-                        if (btn.getAttribute('aria-selected') === 'true' || btn.className.includes('active') || btn.className.includes('selected')) {
-                            isSelected = true;
-                        }
-                    }
-                });
-                
-                const navItem = document.getElementById('nav-item-' + index);
-                if (navItem) {
-                    if (isSelected) {
-                        navItem.classList.add('active');
-                    } else {
-                        navItem.classList.remove('active');
-                    }
-                }
-            });
-        }
-        
-        setInterval(syncTabs, 300);
         
         // Active Card click listener helper
         function attachCardListeners() {
@@ -279,7 +171,7 @@ def render_cab_booking_flow(student: Dict[str, Any]):
     pickup_loc = "GIM Gate No. 2"
 
     st.markdown("""
-    <div style="font-size:0.8rem; color:#2563EB; font-weight:600; margin-bottom:10px;">
+    <div style="font-size:0.8rem; color:var(--brand-accent); font-weight:600; margin-bottom:10px;">
         📍 <strong>Pickup Point:</strong> GIM Gate No. 2 (All verified campus cabs).
     </div>
     """, unsafe_allow_html=True)
@@ -324,7 +216,7 @@ def render_cab_booking_flow(student: Dict[str, Any]):
     st.markdown(f"""
     <div class="route-badge-bar">
         <span>📍 <strong>Gate 2</strong> ➔ <strong>{final_dest}</strong></span>
-        <span style="color:#2563EB; font-weight:700;">{distance_km:.1f} km • ~{duration_mins} mins</span>
+        <span style="color:var(--brand-accent); font-weight:700;">{distance_km:.1f} km • ~{duration_mins} mins</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -360,7 +252,7 @@ def render_cab_booking_flow(student: Dict[str, Any]):
         tier_tag = {
             "Hatchback": ("Eco", "#D1FAE5", "#065F46"),
             "Sedan": ("Comfort", "#EFF6FF", "#1D4ED8"),
-            "SUV": ("SUV Group", "#FEF3C7", "#92400E")
+            "SUV": ("XL", "#FEF3C7", "#92400E")
         }.get(tier, ("Standard", "#F1F5F9", "#475569"))
 
         with st.container(border=True):
@@ -369,16 +261,16 @@ def render_cab_booking_flow(student: Dict[str, Any]):
             <div class="gim-vehicle-card-inner" id="cab_card_inner_{cab['id']}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div>
-                        <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{cab.get('vehicle_model')}</div>
+                        <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">{cab.get('vehicle_model')}</div>
                         <span style="background:{tier_tag[1]}; color:{tier_tag[2]}; padding:2px 8px; border-radius:9999px; font-size:0.75rem; font-weight:600;">{tier_tag[0]}</span>
-                        <span style="font-size:0.8rem; color:#64748B; margin-left:4px;">💺 {pax_capacity} Seats</span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:4px;">💺 {pax_capacity} Seats</span>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(trip_fare)}</div>
-                        <div style="font-size:0.72rem; color:#64748B;">₹{rate_km:.0f}/km • 0% cut</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);">{format_inr(trip_fare)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-secondary);">₹{rate_km:.0f}/km • 0% cut</div>
                     </div>
                 </div>
-                <div style="font-size:0.82rem; color:#475569; margin:6px 0 0 0;">
+                <div style="font-size:0.82rem; color:var(--text-secondary); margin:6px 0 0 0;">
                     Driver: <strong>{cab.get('business_name')}</strong> • ⭐ {cab.get('driver_rating', 5.0):.1f} ({cab.get('total_trips', 0)} trips)
                 </div>
             </div>
@@ -507,15 +399,15 @@ def render_self_drive_booking_flow(student: Dict[str, Any]):
             <div class="gim-vehicle-card-inner" id="sd_card_inner_{v['id']}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div>
-                        <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">{v.get('vehicle_model')}</div>
-                        <span style="font-size:0.8rem; color:#64748B;">💺 {v.get('seating_capacity')} Seats • ⛽ {fuel}</span>
+                        <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">{v.get('vehicle_model')}</div>
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">💺 {v.get('seating_capacity')} Seats • ⛽ {fuel}</span>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-size:1.25rem; font-weight:800; color:#0F172A;">{format_inr(total_rent)}</div>
-                        <div style="font-size:0.72rem; color:#64748B;">{format_inr(hourly_rate)}/hr</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);">{format_inr(total_rent)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-secondary);">{format_inr(hourly_rate)}/hr</div>
                     </div>
                 </div>
-                <div style="font-size:0.82rem; color:#475569; margin:6px 0 0 0;">
+                <div style="font-size:0.82rem; color:var(--text-secondary); margin:6px 0 0 0;">
                     Deposit: {format_inr(deposit)} • Agency: <strong>{v.get('business_name')}</strong>
                 </div>
             </div>
@@ -549,10 +441,10 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
     passengers = trip_context.get("passengers", 1)
 
     st.markdown(f"""
-    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; margin-bottom:12px;">
-        <div style="font-size:0.75rem; font-weight:700; color:#2563EB; text-transform:uppercase;">Trip Summary</div>
-        <div style="font-size:1.05rem; font-weight:700; color:#0F172A; margin:3px 0;">📍 {pickup_point} ➔ {destination}</div>
-        <div style="font-size:0.8rem; color:#475569;">
+    <div style="background:var(--bg-main); border:1px solid var(--border-subtle); border-radius:10px; padding:12px; margin-bottom:12px;">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--brand-accent); text-transform:uppercase;">Trip Summary</div>
+        <div style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin:3px 0;">📍 {pickup_point} ➔ {destination}</div>
+        <div style="font-size:0.8rem; color:var(--text-secondary);">
             {vehicle.get('vehicle_model')} • {vehicle.get('business_name')}<br/>
             {passengers} Rider(s) • {duration_str}
         </div>
@@ -563,10 +455,10 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         st.markdown(f"""
-        <div style="font-size:0.85rem; color:#475569; line-height:1.6;">
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
             • Trip Fare (100% to Driver):<br/>
             • Platform Fee:<br/>
-            <strong style="color:#0F172A; font-size:0.95rem;">Total:</strong>
+            <strong style="color:var(--text-primary); font-size:0.95rem;">Total:</strong>
         </div>
         """, unsafe_allow_html=True)
     with col_b2:
@@ -574,7 +466,7 @@ def show_booking_confirmation_dialog(vehicle: Dict[str, Any], student: Dict[str,
         <div style="text-align:right; font-size:0.85rem; line-height:1.6;">
             <strong>{format_inr(base_fare)}</strong><br/>
             <strong>{format_inr(PLATFORM_CONVENIENCE_FEE)}</strong><br/>
-            <strong style="color:#2563EB; font-size:1.05rem;">{format_inr(total_due)}</strong>
+            <strong style="color:var(--brand-accent); font-size:1.05rem;">{format_inr(total_due)}</strong>
         </div>
         """, unsafe_allow_html=True)
 
@@ -636,25 +528,25 @@ def render_trips_section(student: Dict[str, Any], active_bookings: Optional[List
                     <span style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.75rem; text-transform:lowercase;">
                         🟢 confirmed
                     </span>
-                    <span style="font-size:1.15rem; font-weight:800; color:#2563EB;">{format_inr(b.get('base_trip_fare', 0))}</span>
+                    <span style="font-size:1.15rem; font-weight:800; color:var(--brand-accent);">{format_inr(b.get('base_trip_fare', 0))}</span>
                 </div>
                 
                 <div style="margin-bottom: 8px;">
-                    <span style="font-size:0.78rem; color:#64748B;">Pass Code:</span>
+                    <span style="font-size:0.78rem; color:var(--text-secondary);">Pass Code:</span>
                     <span class="copyable-id" onclick="window.gimCopyText('{b_id[:6].upper()}', this)">#{b_id[:6].upper()} <span class="copy-icon">📋</span></span>
                 </div>
                 
-                <div style="font-size:1.05rem; font-weight:700; color:#0F172A; margin:6px 0 2px 0;">
+                <div style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin:6px 0 2px 0;">
                     📍 {b.get('pickup_location')} ➔ {b.get('dropoff_location')}
                 </div>
                 
-                <div style="font-size:0.82rem; color:#475569; line-height:1.4;">
+                <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.4;">
                     Driver: <strong>{driver_name}</strong><br/>
                     Vehicle: <strong>{b.get('vehicle_model')}</strong> ({b.get('vehicle_number')})
                 </div>
                 
                 <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                    <a href="tel:{phone_unmasked.replace(' ', '')}" style="display:inline-block; background:#2563EB; color:#FFFFFF; font-size:0.8rem; font-weight:700; padding:6px 12px; border-radius:8px; text-decoration:none;">
+                    <a href="tel:{phone_unmasked.replace(' ', '')}" style="display:inline-block; background:var(--brand-accent); color:#FFFFFF; font-size:0.8rem; font-weight:700; padding:6px 12px; border-radius:8px; text-decoration:none;">
                         📞 Call Driver
                     </a>
                     <span class="copyable-id" onclick="window.gimCopyText('{phone_unmasked}', this)" style="padding:5px 10px; font-size:0.78rem;">
@@ -687,8 +579,8 @@ def render_trips_section(student: Dict[str, Any], active_bookings: Optional[List
                 col_h1, col_h2 = st.columns([3, 1])
                 with col_h1:
                     st.markdown(f"""
-                    <strong style="color:#0F172A; font-size:0.95rem;">{pb.get('pickup_location')} ➔ {pb.get('dropoff_location')}</strong><br/>
-                    <span style="font-size:0.8rem; color:#64748B;">{pb.get('vehicle_model')} • {pb.get('rental_duration') or '1.0 hours'}</span>
+                    <strong style="color:var(--text-primary); font-size:0.95rem;">{pb.get('pickup_location')} ➔ {pb.get('dropoff_location')}</strong><br/>
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">{pb.get('vehicle_model')} • {pb.get('rental_duration') or '1.0 hours'}</span>
                     """, unsafe_allow_html=True)
                 with col_h2:
                     badge_style = "background:#D1FAE5; color:#065F46;" if status == "completed" else "background:#F3F4F6; color:#374151;"
@@ -765,12 +657,13 @@ def render_grievance_section(student: Dict[str, Any]):
             with col_t1:
                 st.markdown(
                     f"<span style='background:{status_tag[1]}; color:{status_tag[2]}; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:0.75rem;'>"
-                    f"{status_tag[0]}</span> <strong style='font-size:0.95rem; color:#0F172A; margin-left:4px;'>"
-                    f"{c.get('complaint_type', '').replace('_', ' ').title()}</strong>",
+                    f"{status_tag[0]}</span> <strong style='font-size:0.95rem; color:var(--text-primary); margin-left:4px;'>"
+                    f"{c.get('complaint_type', '').replace('_', ' ').title()}</strong></div>",
                     unsafe_allow_html=True
                 )
-                st.markdown(f"<div style='color:#334155; font-size:0.88rem; margin:6px 0;'>{c.get('description')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color:var(--text-secondary); font-size:0.88rem; margin:6px 0;'>{c.get('description')}</div>", unsafe_allow_html=True)
                 if c.get("admin_notes"):
-                    st.success(f"**Admin Note:** {c.get('admin_notes')}")
+                    st.info(f"💡 Investigator: {c.get('admin_notes')}")
+                st.markdown(f"<div style='text-align:right; font-size:0.72rem; color:var(--text-muted);'>{c.get('id', '')[:6]}</div>", unsafe_allow_html=True)
             with col_t2:
-                st.markdown(f"<div style='text-align:right; font-size:0.72rem; color:#94A3B8;'>#{c.get('id', '')[:6]}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='text-align:right; font-size:0.72rem; color:var(--text-muted);'>#{c.get('id', '')[:6]}</div>", unsafe_allow_html=True)
