@@ -120,7 +120,7 @@ def render_student_portal(student: Dict[str, Any]):
                 <span style="background: var(--status-success-bg); color: var(--status-success-text); font-weight: 700; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">
                     🟢 Active Booking
                 </span>
-                <span style="font-size: 1.15rem; font-weight: 800; color: #10B981;">{format_inr(latest.get('base_trip_fare', 0))}</span>
+                <span style="font-size: 1.15rem; font-weight: 800; color: var(--text-price);">{format_inr(latest.get('base_trip_fare', 0))}</span>
             </div>
             <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 8px 0 4px 0;">
                 📍 {latest.get('pickup_location')} ➔ {latest.get('dropoff_location')}
@@ -266,7 +266,7 @@ def render_cab_booking_flow(student: Dict[str, Any]):
                         <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:4px;">💺 {pax_capacity} Seats</span>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);">{format_inr(trip_fare)}</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:var(--text-price);">{format_inr(trip_fare)}</div>
                         <div style="font-size:0.72rem; color:var(--text-secondary);">₹{rate_km:.0f}/km • 0% cut</div>
                     </div>
                 </div>

@@ -144,6 +144,7 @@ CUSTOM_CSS = """
     --text-primary: #0F172A;     /* Slate 900 */
     --text-secondary: #475569;   /* Slate 600 */
     --text-muted: #94A3B8;       /* Slate 400 */
+    --text-price: #059669;       /* Deep Emerald Green */
 
     --brand-primary: #1E40AF;    /* Deep Cobalt Blue */
     --brand-accent: #2563EB;     /* Royal Blue */
@@ -159,33 +160,59 @@ CUSTOM_CSS = """
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
 }
 
-/* Streamlit Theme Adaptability: Automatically inherit colors from Streamlit's active layout */
-.stApp {
-    --bg-main: var(--st-background-color, #F8FAFC) !important;
-    --bg-surface: var(--st-secondary-background-color, #FFFFFF) !important;
-    --border-subtle: var(--st-border-color, #E2E8F0) !important;
-    --border-focus: var(--st-primary-color, #3B82F6) !important;
-    
-    --text-primary: var(--st-text-color, #0F172A) !important;
-    --text-secondary: var(--st-text-color, #475569) !important;
-    --text-muted: var(--st-text-color, #94A3B8) !important;
+/* Streamlit Theme Adaptability: Automatically inherit colors from active light/dark state */
+@media (prefers-color-scheme: dark) {
+    :root, .stApp {
+        --bg-main: #0B0F19 !important;
+        --bg-surface: #1E293B !important;
+        --border-subtle: #334155 !important;
+        --border-focus: #60A5FA !important;
+        
+        --text-primary: #F1F5F9 !important;     /* Premium Silver White */
+        --text-secondary: #CBD5E1 !important;   /* Light Slate */
+        --text-muted: #8EA9C1 !important;       /* Soft Steel Blue */
+        --text-price: #34D399 !important;       /* Vibrant Mint Green */
 
-    --brand-primary: var(--st-primary-color, #1E40AF) !important;
-    --brand-accent: var(--st-primary-color, #2563EB) !important;
+        --brand-primary: #3B82F6 !important;
+        --brand-accent: #60A5FA !important;     /* Glowing Sky Blue */
+        
+        --status-success-bg: rgba(52, 211, 153, 0.15) !important;
+        --status-success-text: #34D399 !important;
+        --status-warning-bg: rgba(245, 158, 11, 0.15) !important;
+        --status-warning-text: #FBBF24 !important;
+        --status-danger-bg: rgba(239, 68, 68, 0.15) !important;
+        --status-danger-text: #FCA5A5 !important;
+        
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-main: #0B0F19;
-        --bg-surface: #1E293B;
-        --border-subtle: #334155;
-        --border-focus: #60A5FA;
-        --text-primary: #F8FAFC;
-        --text-secondary: #CBD5E1;
-        --text-muted: #64748B;
-        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    }
+html[style*="color-scheme: dark"] :root,
+html[style*="color-scheme: dark"] body,
+html[style*="color-scheme: dark"] .stApp {
+    --bg-main: #0B0F19 !important;
+    --bg-surface: #1E293B !important;
+    --border-subtle: #334155 !important;
+    --border-focus: #60A5FA !important;
+    
+    --text-primary: #F1F5F9 !important;     /* Premium Silver White */
+    --text-secondary: #CBD5E1 !important;   /* Light Slate */
+    --text-muted: #8EA9C1 !important;       /* Soft Steel Blue */
+    --text-price: #34D399 !important;       /* Vibrant Mint Green */
+
+    --brand-primary: #3B82F6 !important;
+    --brand-accent: #60A5FA !important;     /* Glowing Sky Blue */
+    
+    --status-success-bg: rgba(52, 211, 153, 0.15) !important;
+    --status-success-text: #34D399 !important;
+    --status-warning-bg: rgba(245, 158, 11, 0.15) !important;
+    --status-warning-text: #FBBF24 !important;
+    --status-danger-bg: rgba(239, 68, 68, 0.15) !important;
+    --status-danger-text: #FCA5A5 !important;
+    
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Global Clean Mobile-First Canvas */
