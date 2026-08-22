@@ -130,7 +130,7 @@ def render_student_portal(student: Dict[str, Any]):
                 Vehicle: <strong>{latest.get('vehicle_model')}</strong> ({latest.get('vehicle_number')})
             </div>
             <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:8px;">
-                <a href="tel:{latest_phone.replace(' ', '')}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-decoration: none;">
+                <a href="tel:{latest_phone.replace(' ', '')}" style="display: inline-block; background: var(--brand-accent); color: #FFFFFF; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-decoration: none;">
                     📞 Call Driver ({latest_phone})
                 </a>
                 <span style="font-size: 0.72rem; color: var(--status-success-text); font-weight: 600;">✓ Gate 2 Pickup</span>

@@ -17,7 +17,7 @@ def render_login_page():
             <span style="font-size: 1.5rem;">🚗</span>
         </div>
         <h1 style="margin: 0; color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em;">
-            Ride <span style="color: #2563EB;">Smart</span>
+            Ride <span style="color: var(--brand-accent);">Smart</span>
         </h1>
         <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 4px auto 0 auto; font-weight: 500;">
             Goa Institute of Management • Campus Rides & Rentals

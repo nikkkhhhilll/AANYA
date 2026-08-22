@@ -62,7 +62,7 @@ def render_sidebar(authenticated: bool = True):
             </div>
             <div>
                 <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:var(--text-primary); line-height:1.1;">
-                    Ride <span style="color:#2563EB;">Smart</span>
+                    Ride <span style="color:var(--brand-accent);">Smart</span>
                 </h3>
                 <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:500;">
                     Sanquelim Campus
@@ -112,18 +112,18 @@ def render_sidebar(authenticated: bool = True):
 
             # Campus Hotline Card
             st.markdown("""
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px;">
-                <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Campus Transport Desk</span>
-                <div style="font-size:0.85rem; color:#0F172A; font-weight:600; margin-top:4px;">📞 +91 832 2366700</div>
-                <div style="font-size:0.75rem; color:#64748B;">GIM Gate No. 2 Help Desk</div>
+            <div style="background:var(--bg-main); border:1px solid var(--border-subtle); border-radius:10px; padding:12px;">
+                <span style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Campus Transport Desk</span>
+                <div style="font-size:0.85rem; color:var(--text-primary); font-weight:600; margin-top:4px;">📞 +91 832 2366700</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">GIM Gate No. 2 Help Desk</div>
             </div>
             """, unsafe_allow_html=True)
 
         else:
             st.markdown("""
-            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
-                <span style="font-size:0.85rem; color:#2563EB; font-weight:700;">🔒 Secure Access</span><br/>
-                <span style="font-size:0.75rem; color:#64748B; display:block; margin-top:4px;">Please sign in with your @gim.ac.in account or partner credentials to book rides.</span>
+            <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
+                <span style="font-size:0.85rem; color:var(--brand-accent); font-weight:700;">🔒 Secure Access</span><br/>
+                <span style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-top:4px;">Please sign in with your @gim.ac.in account or partner credentials to book rides.</span>
             </div>
             """, unsafe_allow_html=True)
 

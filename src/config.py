@@ -161,17 +161,17 @@ CUSTOM_CSS = """
 
 /* Streamlit Theme Adaptability: Automatically inherit colors from Streamlit's active layout */
 .stApp {
-    --bg-main: var(--background-color, #F8FAFC) !important;
-    --bg-surface: var(--secondary-background-color, #FFFFFF) !important;
-    --border-subtle: var(--border-color, #E2E8F0) !important;
-    --border-focus: var(--primary-color, #3B82F6) !important;
+    --bg-main: var(--st-background-color, #F8FAFC) !important;
+    --bg-surface: var(--st-secondary-background-color, #FFFFFF) !important;
+    --border-subtle: var(--st-border-color, #E2E8F0) !important;
+    --border-focus: var(--st-primary-color, #3B82F6) !important;
     
-    --text-primary: var(--text-color, #0F172A) !important;
-    --text-secondary: var(--text-color, #475569) !important;
-    --text-muted: var(--text-color, #94A3B8) !important;
+    --text-primary: var(--st-text-color, #0F172A) !important;
+    --text-secondary: var(--st-text-color, #475569) !important;
+    --text-muted: var(--st-text-color, #94A3B8) !important;
 
-    --brand-primary: var(--primary-color, #1E40AF) !important;
-    --brand-accent: var(--primary-color, #2563EB) !important;
+    --brand-primary: var(--st-primary-color, #1E40AF) !important;
+    --brand-accent: var(--st-primary-color, #2563EB) !important;
 }
 
 @media (prefers-color-scheme: dark) {
